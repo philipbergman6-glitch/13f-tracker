@@ -1,0 +1,21 @@
+manager,aum_usd,basis,as_of,source_url,retrieved,note
+Situational Awareness,9278344000,Form ADV RAUM (gross),2026-06-11,https://adviserinfo.sec.gov/firm/summary/333011,2026-08-12,as_of = latest ADV filing date; young firm - RAUM moves fast
+Altimeter,18753715687,Form ADV RAUM (gross),2026-03-31,https://adviserinfo.sec.gov/firm/summary/160017,2026-08-12,includes private/venture vehicles not in 13F
+Atreides,8943718846,Form ADV RAUM (gross),2026-05-29,https://adviserinfo.sec.gov/firm/summary/301152,2026-08-12,
+Coatue,92705722582,Form ADV RAUM (gross),2026-07-29,https://adviserinfo.sec.gov/firm/summary/157910,2026-08-12,large private book - expect big gap vs 13F
+Maverick Capital,15846499306,Form ADV RAUM (gross),2026-03-31,https://adviserinfo.sec.gov/firm/summary/108262,2026-08-12,RAUM is gross (long+short leverage); net AUM lower
+Viking Global,78202235935,Form ADV RAUM (gross),2026-06-15,https://adviserinfo.sec.gov/firm/summary/132272,2026-08-12,gross RAUM; press-quoted net AUM is roughly half
+Greenlight,4798925830,Form ADV RAUM (gross),2026-05-01,https://adviserinfo.sec.gov/firm/summary/157081,2026-08-12,DME Capital Management LP (Greenlight's management co); related registrants not summed
+Icahn,2600000000,IEP indicative NAV (approx.),2026-06-30,https://www.sec.gov/Archives/edgar/data/813762/000110465926090743/tm2622273d1_ex99-1.htm,2026-08-12,holding-company indicative NAV per Q2-2026 8-K exhibit - not a manager AUM; no ADV RAUM exists (family capital)
+Fairholme,2141157171,Form ADV RAUM (gross),2026-03-27,https://adviserinfo.sec.gov/firm/summary/107987,2026-08-12,
+Pershing Square,25061606673,Form ADV RAUM (gross),2026-06-03,https://adviserinfo.sec.gov/firm/summary/132982,2026-08-12,PSH weekly NAV at pershingsquareholdings.com is a subset cross-check
+Third Point,28732008681,Form ADV RAUM (gross),2026-05-01,https://adviserinfo.sec.gov/firm/summary/137927,2026-08-12,includes reinsurance assets; press hedge-fund AUM smaller
+Berkshire Hathaway,323779000000,Equity securities at fair value (10-Q),2026-06-30,https://data.sec.gov/api/xbrl/companyconcept/CIK0001067983/us-gaap/EquitySecuritiesFvNi.json,2026-08-12,Operating company - no AUM concept; 13F misses foreign-listed holdings (e.g. Japan trading houses)
+Lone Pine,21624342800,Form ADV RAUM (gross),2026-03-30,https://adviserinfo.sec.gov/firm/summary/156602,2026-08-12,gross RAUM
+Appaloosa,20396101407,Form ADV RAUM (gross),2026-03-25,https://adviserinfo.sec.gov/firm/summary/281909,2026-08-12,family office (Tepper) but SEC-registered
+Tiger Global,77993959953,Form ADV RAUM (gross),2026-03-27,https://adviserinfo.sec.gov/firm/summary/160318,2026-08-12,dominated by private/venture funds; 13F covers only the public book
+Giverny,2703277172,Form ADV RAUM (gross),2026-06-12,https://adviserinfo.sec.gov/firm/summary/130640,2026-08-12,Giverny Capital Inc. (Montreal; CIK 1641864 per manager_map) - NOT the NY affiliate GCAM LLC
+Leon Cooperman,,,,https://www.cnbc.com/2018/07/23/coopermans-omega-is-converting-to-family-office.html,2026-08-12,family office since 2018 - no ADV and no public figure; dashboard shows 13F long value only
+TCI,77100000000,Hedge-fund assets (press; LCH Investments survey),2025-12-31,https://www.forbes.com/sites/hanktucker/2026/01/18/hedge-fund-billionaire-chris-hohns-tci-profited-by-a-record-189-billion-in-2025/,2026-08-12,MEDIUM confidence - press-only single source; SEC exempt reporting adviser so no RAUM
+Fundsmith,,,,https://adviserinfo.sec.gov/firm/summary/160365,2026-08-12,two SEC registrants with unclear overlap (Fundsmith LLP $18.5bn CRD 160365; Fundsmith Investment Services Ltd $24.6bn CRD 310498) - not summable; dashboard shows 13F value only
+Lindsell Train,9254180434,Form ADV RAUM (gross),2026-04-27,https://adviserinfo.sec.gov/firm/summary/158323,2026-08-12,firm-wide RAUM (UK manager; SEC-registered)

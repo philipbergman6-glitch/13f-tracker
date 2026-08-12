@@ -1,0 +1,347 @@
+"""Static-HTML dashboard generator (ticket 11).
+
+Reads only committed inputs — data/holdings/, data/out/changes/, data/ref/
+(aum.csv, sectors.csv, manager_map.csv) — and writes the self-contained
+dashboard/index.html. Every figure on the page traces to those CSVs; the
+takeaway sentences are deterministic templates over the same numbers.
+
+Usage:
+    python src/dashboard.py [--quarter 2026Q1] [--out dashboard/index.html]
+
+Regenerate each quarter after `python src/pipeline.py` (and sectors.py for
+any new CUSIPs).
+"""
+from __future__ import annotations
+
+import argparse
+import csv
+import datetime as dt
+import json
+from collections import Counter, defaultdict
+from pathlib import Path
+
+from changes import CHANGE_COLUMNS, load_main_book
+from common import HOLDINGS, OUT, REF, REPO, load_manager_map, manager_slug
+
+TEMPLATE = Path(__file__).with_name("dashboard_template.html")
+DEFAULT_OUT = REPO / "dashboard" / "index.html"
+
+
+# --- formatting --------------------------------------------------------------
+
+def fmt_usd(n: float) -> str:
+    sign, n = ("-", -n) if n < 0 else ("", n)
+    if n >= 1e9:
+        v = n / 1e9
+        if v >= 100:
+            return f"{sign}${v:,.1f}bn"
+        s = f"{v:.2f}".rstrip("0").rstrip(".")  # 2.65 / 34.1 / 1.2 / 5
+        return f"{sign}${s}bn"
+    if n >= 1e6:
+        return f"{sign}${n / 1e6:,.1f}m"
+    return f"{sign}${n:,.0f}"
+
+
+def fmt_pct(x: float) -> str:
+    return f"{x:.1f}%"
+
+
+def fmt_signed_pct(x: float) -> str:
+    return f"{x:+.1f}%"
+
+
+def qlabel(qkey: str) -> str:
+    """'2026Q1' -> 'Q1 2026'."""
+    return f"Q{qkey[5]} {qkey[:4]}"
+
+
+# --- shaping (pure) ----------------------------------------------------------
+
+def build_manager_stats(cur_book: dict, prev_book: dict) -> dict:
+    value = sum(e["value"] for e in cur_book.values())
+    value_prev = sum(e["value"] for e in prev_book.values()) if prev_book else None
+    top = sorted((e["value"] for e in cur_book.values()), reverse=True)[:10]
+    return {
+        "value": value,
+        "value_prev": value_prev,
+        "qoq_pct": ((value - value_prev) / value_prev * 100)
+                   if value_prev else None,
+        "n_positions": len(cur_book),
+        "top10_pct": (sum(top) / value * 100) if value else 0.0,
+    }
+
+
+def top_positions(book: dict, n: int = 15) -> list[dict]:
+    total = sum(e["value"] for e in book.values()) or 1
+    ranked = sorted(book.items(), key=lambda kv: -kv[1]["value"])[:n]
+    return [{"cusip": c, "ticker": e["ticker"], "issuer": e["issuer"],
+             "shares": e["shares"], "value": e["value"],
+             "weight_pct": e["value"] / total * 100} for c, e in ranked]
+
+
+def sector_mix(book: dict, sector_of: dict[str, str], top_n: int = 6) -> list[dict]:
+    total = sum(e["value"] for e in book.values()) or 1
+    by_sector: dict[str, int] = defaultdict(int)
+    for cusip, e in book.items():
+        by_sector[sector_of.get(cusip) or "Unclassified"] += e["value"]
+    ranked = sorted(by_sector.items(), key=lambda kv: -kv[1])
+    mix = [{"sector": s, "value": v, "weight_pct": v / total * 100}
+           for s, v in ranked[:top_n]]
+    tail = ranked[top_n:]
+    if tail:
+        v = sum(v for _, v in tail)
+        mix.append({"sector": "Other", "value": v,
+                    "weight_pct": v / total * 100})
+    return mix
+
+
+BUY_ACTIONS = {"new", "add"}
+SELL_ACTIONS = {"exit", "trim"}
+
+
+def consensus(changes_by_manager: dict[str, list[dict]],
+              min_count: int = 3) -> dict[str, list[dict]]:
+    """Tickers bought (new/add) or sold (exit/trim) by >= min_count managers."""
+    out = {}
+    for side, actions in (("buys", BUY_ACTIONS), ("sells", SELL_ACTIONS)):
+        grouped: dict[str, dict] = {}
+        for manager, rows in changes_by_manager.items():
+            for row in rows:
+                if row["action"] not in actions:
+                    continue
+                key = row["ticker"] or row["cusip"]
+                g = grouped.setdefault(key, {
+                    "ticker": row["ticker"], "issuer": row["issuer"],
+                    "managers": {}, "value_cur_usd": 0})
+                if manager not in g["managers"]:
+                    g["managers"][manager] = row["action"]
+                    g["value_cur_usd"] += int(float(row["value_cur_usd"] or 0))
+        rows = [{"ticker": g["ticker"], "issuer": g["issuer"],
+                 "n_managers": len(g["managers"]),
+                 "managers": [{"manager": m, "action": a}
+                              for m, a in sorted(g["managers"].items())],
+                 "value_cur_usd": g["value_cur_usd"]}
+                for g in grouped.values() if len(g["managers"]) >= min_count]
+        rows.sort(key=lambda r: (-r["n_managers"], -r["value_cur_usd"]))
+        out[side] = rows
+    return out
+
+
+def _change_counts_phrase(changes: list[dict]) -> str:
+    counts = Counter(c["action"] for c in changes)
+    labels = [("new", "new buys"), ("add", "adds"),
+              ("trim", "trims"), ("exit", "exits")]
+    parts = [f"{counts[a]} {label if counts[a] != 1 else label[:-1]}"
+             for a, label in labels if counts[a]]
+    if len(parts) > 1:
+        return ", ".join(parts[:-1]) + " and " + parts[-1]
+    return parts[0] if parts else ""
+
+
+def _biggest_move_sentence(changes: list[dict]) -> str:
+    news = [c for c in changes if c["action"] == "new"]
+    adds = [c for c in changes if c["action"] == "add"]
+    exits = [c for c in changes if c["action"] == "exit"]
+    tail = f" — {_change_counts_phrase(changes)} in all" \
+        if len(changes) > 1 else ""
+    if news:
+        big = max(news, key=lambda c: int(float(c["value_cur_usd"] or 0)))
+        name = big["ticker"] or big["issuer"]
+        return (f"The quarter's largest move was a new "
+                f"{fmt_usd(int(float(big['value_cur_usd'] or 0)))} position in "
+                f"{name}{tail}.")
+    if adds:
+        big = max(adds, key=lambda c: abs(float(c["delta_weight_pp"] or 0)))
+        name = big["ticker"] or big["issuer"]
+        return (f"The quarter's largest move was adding to {name} "
+                f"({float(big['delta_weight_pp']):+.1f}pp of book weight)"
+                f"{tail}.")
+    big = exits[0] if exits else changes[0]
+    name = big["ticker"] or big["issuer"]
+    verb = "exiting" if big["action"] == "exit" else "trimming"
+    return f"The quarter's largest move was {verb} {name}{tail}."
+
+
+def takeaways(name: str, qkey: str, prev_qkey: str | None, stats: dict,
+              changes: list[dict], mix: list[dict]) -> list[str]:
+    """2-3 deterministic sentences; every number comes from the committed CSVs."""
+    out = []
+    if stats["qoq_pct"] is not None and prev_qkey:
+        out.append(
+            f"{name} ended {qlabel(qkey)} with a {fmt_usd(stats['value'])} "
+            f"main book across {stats['n_positions']} positions, "
+            f"{fmt_signed_pct(stats['qoq_pct'])} vs {qlabel(prev_qkey)}.")
+    else:
+        out.append(
+            f"{name} ended {qlabel(qkey)} with a {fmt_usd(stats['value'])} "
+            f"main book across {stats['n_positions']} positions — its first "
+            f"tracked quarter.")
+    if changes:
+        out.append(_biggest_move_sentence(changes))
+    elif prev_qkey:
+        out.append(f"No significant changes versus {qlabel(prev_qkey)}.")
+    if mix:
+        out.append(
+            f"{mix[0]['sector']} is the largest exposure at "
+            f"{fmt_pct(mix[0]['weight_pct'])} of the book, and the top 10 "
+            f"positions account for {fmt_pct(stats['top10_pct'])}.")
+    return out[:3]
+
+
+def common_quarter(latest_by_slug: dict[str, str]) -> str:
+    """The dashboard's as-of quarter: the most common latest quarter across
+    managers (ties break to the earlier quarter — maximizes coverage)."""
+    counts = Counter(latest_by_slug.values())
+    return sorted(counts.items(), key=lambda kv: (-kv[1], kv[0]))[0][0]
+
+
+# --- loading -----------------------------------------------------------------
+
+def load_options_rows(path: Path) -> list[dict]:
+    """Put/call rows (stored but outside the main book)."""
+    with open(path, newline="", encoding="utf-8") as fh:
+        return [r for r in csv.DictReader(fh) if r["put_call"]]
+
+
+def load_accessions(path: Path) -> list[dict]:
+    """Unique (filer_cik, accession) pairs -> EDGAR filing-index links."""
+    with open(path, newline="", encoding="utf-8") as fh:
+        pairs = sorted({(r["filer_cik"], r["accession"])
+                        for r in csv.DictReader(fh)})
+    return [{"cik": cik, "accession": acc,
+             "url": f"https://www.sec.gov/Archives/edgar/data/{int(cik)}/"
+                    f"{acc.replace('-', '')}/{acc}-index.htm"}
+            for cik, acc in pairs]
+
+
+def load_changes_rows(slug: str, qkey: str) -> list[dict]:
+    path = OUT / "changes" / slug / f"{qkey}.csv"
+    if not path.exists():
+        return []
+    with open(path, newline="", encoding="utf-8") as fh:
+        return list(csv.DictReader(fh))
+
+
+def load_aum() -> dict[str, dict]:
+    with open(REF / "aum.csv", newline="", encoding="utf-8") as fh:
+        return {r["manager"]: r for r in csv.DictReader(fh)}
+
+
+def load_sector_map() -> dict[str, str]:
+    path = REF / "sectors.csv"
+    if not path.exists():
+        return {}
+    with open(path, newline="", encoding="utf-8") as fh:
+        return {r["cusip"]: r["sector"] for r in csv.DictReader(fh)}
+
+
+def prev_quarter_file(mgr_dir: Path, qkey: str) -> str | None:
+    quarters = sorted(p.stem for p in mgr_dir.glob("*.csv"))
+    older = [q for q in quarters if q < qkey]
+    return older[-1] if older else None
+
+
+# --- payload -----------------------------------------------------------------
+
+def build_payload(quarter: str | None = None) -> dict:
+    spans = load_manager_map()
+    managers = sorted({s.manager for s in spans})
+    aum = load_aum()
+    sector_of = load_sector_map()
+
+    latest = {}
+    for m in managers:
+        slug = manager_slug(m)
+        files = sorted((HOLDINGS / slug).glob("*.csv"))
+        if files:
+            latest[slug] = files[-1].stem
+    as_of = quarter or common_quarter(latest)
+
+    payload = {"as_of": as_of, "as_of_label": qlabel(as_of),
+               "generated": dt.date.today().isoformat(),
+               "managers": [], "consensus": None}
+    changes_by_manager = {}
+
+    for m in managers:
+        slug = manager_slug(m)
+        mgr_dir = HOLDINGS / slug
+        qkey = as_of if (mgr_dir / f"{as_of}.csv").exists() else latest.get(slug)
+        if not qkey:
+            continue
+        cur_path = mgr_dir / f"{qkey}.csv"
+        prev_q = prev_quarter_file(mgr_dir, qkey)
+        cur_book = load_main_book(cur_path)
+        prev_book = load_main_book(mgr_dir / f"{prev_q}.csv") if prev_q else {}
+        stats = build_manager_stats(cur_book, prev_book)
+        chg = load_changes_rows(slug, qkey)
+        mix = sector_mix(cur_book, sector_of)
+        options = load_options_rows(cur_path)
+        mgr_spans = [s for s in spans if s.manager == m]
+        aum_row = aum.get(m, {})
+
+        changes_by_manager[m] = chg
+        payload["managers"].append({
+            "manager": m, "slug": slug, "quarter": qkey,
+            "quarter_label": qlabel(qkey), "prev_quarter": prev_q,
+            "prev_quarter_label": qlabel(prev_q) if prev_q else None,
+            "later_filing": latest.get(slug) if latest.get(slug, qkey) > qkey else None,
+            "filers": [{"name": s.filer_name, "cik": s.cik} for s in mgr_spans
+                       if s.covers(qkey)],
+            "accessions": load_accessions(cur_path),
+            "stats": stats,
+            "aum": {
+                "aum_usd": int(aum_row["aum_usd"]) if aum_row.get("aum_usd") else None,
+                "basis": aum_row.get("basis", ""),
+                "as_of": aum_row.get("as_of", ""),
+                "source_url": aum_row.get("source_url", ""),
+                "retrieved": aum_row.get("retrieved", ""),
+                "note": aum_row.get("note", ""),
+            },
+            "top_positions": top_positions(cur_book, 15),
+            "changes": chg,
+            "sector_mix": mix,
+            "takeaways": takeaways(m, qkey, prev_q, stats, chg, mix),
+            "holdings": top_positions(cur_book, len(cur_book)),
+            "options": [{
+                "ticker": r["ticker"], "issuer": r["issuer"],
+                "put_call": r["put_call"],
+                "value": int(float(r["value_usd"] or 0)),
+                "shares": int(float(r["shares"] or 0)),
+            } for r in options],
+        })
+
+    payload["consensus"] = consensus(changes_by_manager)
+    payload["managers"].sort(key=lambda m: -m["stats"]["value"])
+    payload["combined_value"] = sum(m["stats"]["value"] for m in payload["managers"])
+    return payload
+
+
+# --- rendering ---------------------------------------------------------------
+
+def render(payload: dict) -> str:
+    import base64
+    html = TEMPLATE.read_text(encoding="utf-8")
+    font = Path(__file__).with_name("assets") / "newsreader-var.woff2"
+    html = html.replace("__FONT_NEWSREADER__",
+                        base64.b64encode(font.read_bytes()).decode())
+    blob = json.dumps(payload, separators=(",", ":")).replace("</", "<\\/")
+    return html.replace("/*__DATA__*/null", blob)
+
+
+def main() -> None:
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--quarter", default=None, help="as-of quarter, e.g. 2026Q1")
+    ap.add_argument("--out", default=str(DEFAULT_OUT))
+    args = ap.parse_args()
+    payload = build_payload(args.quarter)
+    out = Path(args.out)
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(render(payload), encoding="utf-8")
+    print(f"Dashboard: {out} ({out.stat().st_size / 1024:.0f} KB), "
+          f"as of {payload['as_of']}, {len(payload['managers'])} managers, "
+          f"consensus {len(payload['consensus']['buys'])} buys / "
+          f"{len(payload['consensus']['sells'])} sells")
+
+
+if __name__ == "__main__":
+    main()

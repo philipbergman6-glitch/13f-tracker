@@ -1,0 +1,18 @@
+cusip,ticker,cik,expect_name,note
+H1467J104,CB,896159,CHUBB,foreign-domiciled CINS; OpenFIGI returns no match; CIK from SEC company list 2026-08-12
+N07059210,ASML,937966,ASML,foreign-domiciled CINS; OpenFIGI returns no match
+G29183103,ETN,1551182,EATON CORP,foreign-domiciled CINS; OpenFIGI returns no match
+G6683N103,NU,1691493,NU HOLDINGS,foreign-domiciled CINS; OpenFIGI returns no match
+L8681T102,SPOT,1639920,SPOTIFY,foreign-domiciled CINS; OpenFIGI returns no match
+N3168P101,FER,1468522,FERROVIAL,foreign-domiciled CINS; OpenFIGI returns no match
+Q4982L109,IREN,1878848,IREN,foreign-domiciled CINS; OpenFIGI returns no match
+G51502105,JCI,833444,JOHNSON CONTROLS,foreign-domiciled CINS; OpenFIGI returns no match
+143658300,CCL,815097,CARNIVAL,paired dual-listed share line; FIGI best-match was a non-US line
+G0403H108,AON,315293,AON,foreign-domiciled CINS; OpenFIGI returns no match
+G76279101,ROIV,1635088,ROIVANT,foreign-domiciled CINS; OpenFIGI returns no match
+G0260P102,AS,1988894,AMER SPORTS,foreign-domiciled CINS; OpenFIGI returns no match
+G54950103,LIN,1707925,LINDE,foreign-domiciled CINS; OpenFIGI returns no match
+N62509109,NAMS,1936258,NEWAMSTERDAM,foreign-domiciled CINS; OpenFIGI returns no match
+G25508105,CRH,849395,CRH,foreign-domiciled CINS; OpenFIGI returns no match
+025537101,AEP,4904,AMERICAN ELECTRIC POWER,FIGI cache row lacks CIK match; name+SIC verified via submissions API 2026-08-12
+G3398L118,PLGO,1636639,PELAGOS,foreign-domiciled CINS; filed as Fidelis Insurance Holdings - renamed Pelagos Insurance Capital 2026-05-07 per EDGAR formerNames; CIK via EDGAR full-text search 2026-08-12
