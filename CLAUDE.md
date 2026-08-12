@@ -1,8 +1,9 @@
 # 13_f
 
 ## What this is
-(Placeholder — Philip to confirm.) Likely: working with SEC 13F filings (institutional
-holdings data). Update this section with the real goal before serious work starts.
+Quarterly 13F tracker for a fixed 20-manager list: EDGAR-only pipeline (ADR 0001) that
+builds quarter-final holdings CSVs, a static HTML dashboard, and per-manager TradingView
+watchlists. Terminology in CONTEXT.md; decisions in `.scratch\13f-tracker\` (wayfinder map).
 
 ## Conventions
 - Python 3.14 (system default), native Windows — no WSL.
@@ -12,7 +13,10 @@ holdings data). Update this section with the real goal before serious work start
 - Superseded files are archived, not deleted (firm-wide rule).
 
 ## Layout
-- `src\` — code
+- `src\` — code (`pipeline.py` is the entry point)
 - `data\raw\` — untouched source data (gitignored)
-- `data\out\` — generated outputs (gitignored)
+- `data\out\` — generated outputs incl. change tables + verification (gitignored)
+- `data\holdings\<manager>\<YYYYQn>.csv` — committed quarter-final holdings
+- `data\ref\` — committed reference tables (manager map, CUSIP→ticker cache)
 - `notes\` — working notes / findings
+- `docs\adr\` — architecture decision records
