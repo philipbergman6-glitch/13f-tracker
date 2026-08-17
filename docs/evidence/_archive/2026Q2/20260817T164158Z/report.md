@@ -1,6 +1,6 @@
 # Evidence package — 2026Q2 release
 
-Generated 2026-08-17T17:13:37+00:00 from pipeline run 2026-08-17T17:12:06+00:00 (window 2024Q2–2026Q2, force_refresh=True), source commit `1a5f1ddb4821` with 6 uncommitted change(s) at generation time.
+Generated 2026-08-17T16:41:10+00:00 from pipeline run 2026-08-17T16:40:48+00:00 (window 2024Q2–2026Q2, force_refresh=False), source commit `f4bd9ded01aa` with 1 uncommitted change(s) at generation time.
 
 Every figure below is copied from that run's outputs (nothing re-derived); machine-readable appendices sit next to this report. Required-item checklist:
 
@@ -19,7 +19,7 @@ Every figure below is copied from that run's outputs (nothing re-derived); machi
 
 ## 1. Filings used
 
-201 filings across 2024Q2–2026Q2 (200 parsed 13F-HR/13F-HR/A, 1 13F-NT notice(s)). `filings.csv` lists, per filing: manager, filer CIK, form, accession, filing date, report period, SEC EDGAR URL, raw-data retrieval date, merge role, and cover-page reconciliation. Retrieval dates are the raw documents' download dates under `data/raw/` (immutable once fetched); 13F-NT retrieval dates are those of the SEC submissions index that evidences the notice.
+201 filings across 2024Q2–2026Q2 (200 parsed 13F-HR/13F-HR/A, 1 13F-NT notices). `filings.csv` lists, per filing: manager, filer CIK, form, accession, filing date, report period, SEC EDGAR URL, raw-data retrieval date, merge role, and cover-page reconciliation. Retrieval dates are the raw documents' download dates under `data/raw/` (immutable once fetched); 13F-NT retrieval dates are those of the SEC submissions index that evidences the notice.
 
 ### 2026Q2 filings (22)
 
@@ -116,7 +116,7 @@ Every mapped (manager, filer, quarter) in the window has an explicit committed s
 
 ## 6. Automated tests
 
-`python -m unittest discover -s tests` (Python 3.14.6): **145 tests, PASS**, run 2026-08-17T17:13:35+00:00 (`test_results.json`). A failing suite blocks this package.
+`python -m unittest discover -s tests` (Python 3.14.6): **111 tests, PASS**, run 2026-08-17T16:41:10+00:00 (`test_results.json`). A failing suite blocks this package.
 
 ## 7. Known exceptions
 
@@ -132,25 +132,25 @@ Accepted filer-side discrepancies and scope decisions, from the committed regist
 
 ## 8. Checksums and versions
 
-`checksums.csv` holds SHA-256 digests for the release dashboard build and all 348 source data files it derives from (holdings CSVs, filer statuses, reference tables, change tables, run gate outputs). At publication, release.py re-verifies every digest against the artifacts being published. Source code version: commit `1a5f1ddb48214dd0213fa65999b8f6c2182f8630` (2026-08-17T20:13:30+03:00).
+`checksums.csv` holds SHA-256 digests for the published dashboard and all 348 source data files it derives from (holdings CSVs, filer statuses, reference tables, change tables, run gate outputs). Source code version: commit `f4bd9ded01aac5ff74d7f493466c5ccbc393dd14` (2026-08-17T19:41:07+03:00).
 
-- `dashboard/staging/index.html` — SHA-256 `9023de90e406bd604155814de2ed1e9bda6ed95d97a572ef80c581d781b46aec`
+- `dashboard/index.html` — SHA-256 `ee6f564d7cf2699562afbd5ac017e75bd0b01258166c78591a47b30b7a1bbff1`
 
 ## 9. How to reproduce this release
 
 ```
-git checkout 1a5f1ddb48214dd0213fa65999b8f6c2182f8630
-python src/release.py stage --quarter 2026Q2 --start 2024Q2 --end 2026Q2
+git checkout f4bd9ded01aac5ff74d7f493466c5ccbc393dd14
+python src/pipeline.py --start 2024Q2 --end 2026Q2 --force-refresh   # add --skip-figi to reuse the committed ticker cache
+python src/dashboard.py --quarter 2026Q2
+python src/evidence.py --quarter 2026Q2
 ```
-
-`stage` wraps, in order: `pipeline.py --force-refresh`, the full test suite, `dashboard.py --out dashboard/staging/index.html`, and this package's generation (add `--skip-figi` to reuse the committed ticker cache).
 
 Raw EDGAR responses cache under `data/raw/` (re-fetchable; superseded mutable indexes are archived, not overwritten). Re-running against live EDGAR after the release date can differ only if a filer amends: compare the regenerated holdings CSVs against the digests in `checksums.csv` to detect any drift.
 
 ## Reviewer sign-off
 
-Completed by a human reviewer before the release is considered approved: replace each blank below, commit this file, then run `python src/release.py publish --quarter 2026Q2`. The publish gate blocks unless the decision line begins with `approve` and the signed report is committed; regenerating this package rewrites the block blank, so a stale approval can never carry over.
+Completed by a human reviewer before the release is considered approved; the signed copy is committed in place.
 
 - Reviewer name: ______________________
-- Review date (YYYY-MM-DD): ______________________
+- Review date: ______________________
 - Decision (approve / reject, with notes): ______________________
