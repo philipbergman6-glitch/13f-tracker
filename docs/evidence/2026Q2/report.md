@@ -151,6 +151,6 @@ Raw EDGAR responses cache under `data/raw/` (re-fetchable; superseded mutable in
 
 Completed by a human reviewer before the release is considered approved: replace each blank below, commit this file, then run `python src/release.py publish --quarter 2026Q2`. The publish gate blocks unless the decision line begins with `approve` and the signed report is committed; regenerating this package rewrites the block blank, so a stale approval can never carry over.
 
-- Reviewer name: ______________________
-- Review date (YYYY-MM-DD): ______________________
-- Decision (approve / reject, with notes): ______________________
+- Reviewer name: Philip Bergman
+- Review date (YYYY-MM-DD): 2026-08-17
+- Decision (approve / reject, with notes): approve — reviewed reconciliation and exceptions
