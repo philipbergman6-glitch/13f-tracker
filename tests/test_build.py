@@ -123,9 +123,11 @@ class TestDedupeFilers(FlagCapture):
         lp = make_parsed(cik=2045724, acc="a1", rows=[dict(r) for r in rows])
         partners = make_parsed(cik=2038540, acc="a2",
                                rows=[dict(r) for r in reversed(rows)])
-        kept = build.dedupe_filers("Situational Awareness", "2026Q1",
-                                   {2045724: [lp], 2038540: [partners]})
+        kept, dropped = build.dedupe_filers("Situational Awareness", "2026Q1",
+                                            {2045724: [lp], 2038540: [partners]})
         self.assertEqual(list(kept), [2045724])
+        self.assertEqual(list(dropped), [2038540])
+        self.assertIn("identical to filer 2045724 acc a1", dropped[2038540])
         self.assertEqual(len(self.flags), 1)
         self.assertEqual(self.flags[0]["filer_cik"], 2038540)
         self.assertIn("identical to filer 2045724", self.flags[0]["problem"])
@@ -137,15 +139,17 @@ class TestDedupeFilers(FlagCapture):
         r_b["vote_sole"], r_b["vote_none"] = "0", r_a["shares"]
         a = make_parsed(cik=1, acc="a1", rows=[r_a])
         b = make_parsed(cik=2, acc="a2", rows=[r_b])
-        kept = build.dedupe_filers("m", "2026Q1", {1: [a], 2: [b]})
+        kept, dropped = build.dedupe_filers("m", "2026Q1", {1: [a], 2: [b]})
         self.assertEqual(list(kept), [1])
+        self.assertEqual(list(dropped), [2])
         self.assertEqual(len(self.flags), 1)
 
     def test_differing_books_both_kept(self):
         a = make_parsed(cik=1, acc="a1", rows=[make_row(shares="100")])
         b = make_parsed(cik=2, acc="a2", rows=[make_row(shares="101")])
-        kept = build.dedupe_filers("m", "2026Q1", {1: [a], 2: [b]})
+        kept, dropped = build.dedupe_filers("m", "2026Q1", {1: [a], 2: [b]})
         self.assertEqual(list(kept), [1, 2])
+        self.assertEqual(dropped, {})
         self.assertEqual(self.flags, [])
 
     def test_identical_rows_across_multiple_filings_of_one_filer(self):
@@ -154,14 +158,16 @@ class TestDedupeFilers(FlagCapture):
         a = [make_parsed(cik=1, acc="a1", rows=[dict(r1)]),
              make_parsed(cik=1, acc="a2", rows=[dict(r2)])]
         b = [make_parsed(cik=2, acc="b1", rows=[dict(r1), dict(r2)])]
-        kept = build.dedupe_filers("m", "2026Q1", {1: a, 2: b})
+        kept, dropped = build.dedupe_filers("m", "2026Q1", {1: a, 2: b})
         self.assertEqual(list(kept), [1])
+        self.assertIn("acc a1+a2", dropped[2])
 
     def test_empty_books_never_treated_as_duplicates(self):
         a = make_parsed(cik=1, acc="a1", rows=[])
         b = make_parsed(cik=2, acc="a2", rows=[])
-        kept = build.dedupe_filers("m", "2026Q1", {1: [a], 2: [b]})
+        kept, dropped = build.dedupe_filers("m", "2026Q1", {1: [a], 2: [b]})
         self.assertEqual(list(kept), [1, 2])
+        self.assertEqual(dropped, {})
         self.assertEqual(self.flags, [])
 
 

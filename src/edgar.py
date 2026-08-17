@@ -48,8 +48,16 @@ def _cik_url_name(cik: int) -> str:
     return f"CIK{cik:010d}.json"
 
 
+FORMS_13F = ("13F-HR", "13F-HR/A", "13F-NT", "13F-NT/A")
+
+
 def list_13f_filings(cik: int, earliest_report_date: str) -> list[Filing]:
-    """All 13F-HR / 13F-HR/A filings for cik with report_date >= earliest_report_date.
+    """All 13F filings (HR and NT, incl. amendments) for cik with
+    report_date >= earliest_report_date.
+
+    13F-NT notices carry no holdings but explain a filer's absence: the holdings
+    were reported in another filer's 13F. Without them a notice quarter is
+    indistinguishable from a late filing.
 
     Reads the 'recent' block of the submissions JSON; follows the paged history
     files if 'recent' does not reach back to earliest_report_date.
@@ -79,7 +87,7 @@ def list_13f_filings(cik: int, earliest_report_date: str) -> list[Filing]:
             block["form"], block["accessionNumber"],
             block["filingDate"], block["reportDate"],
         ):
-            if form in ("13F-HR", "13F-HR/A") and rdate >= earliest_report_date:
+            if form in FORMS_13F and rdate >= earliest_report_date:
                 filings.append(Filing(cik, acc, form, fdate, rdate))
     # Dedup (recent and paged files can overlap), stable order by filing date.
     seen, unique = set(), []

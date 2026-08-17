@@ -17,6 +17,9 @@ watchlists. Terminology in CONTEXT.md; decisions in `.scratch\13f-tracker\` (way
 - `data\raw\` — untouched source data (gitignored)
 - `data\out\` — generated outputs incl. change tables + verification (gitignored)
 - `data\holdings\<manager>\<YYYYQn>.csv` — committed quarter-final holdings
+- `data\holdings\filer_status.csv` — committed per-filer quarterly status
+  (HOLDINGS / NT / DUPLICATE / NOT_DUE / LATE / ERROR); LATE or ERROR blocks
+  publication of that manager-quarter and fails the pipeline run
 - `data\ref\` — committed reference tables (manager map, CUSIP→ticker cache)
 - `notes\` — working notes / findings
 - `docs\adr\` — architecture decision records

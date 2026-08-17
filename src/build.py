@@ -86,33 +86,43 @@ def _book_signature(plist: list[ParsedFiling]) -> tuple:
 
 def dedupe_filers(manager: str, qkey: str,
                   merged_by_cik: dict[int, list[ParsedFiling]],
-                  ) -> dict[int, list[ParsedFiling]]:
+                  ) -> tuple[dict[int, list[ParsedFiling]], dict[int, str]]:
     """Drop filers whose position book is identical to an earlier-listed filer's.
 
     Two filers of one manager reporting the same rows share-for-share is one book
     reported twice (e.g. Situational Awareness LP / Partners LP, 2026Q1); summing
-    them would double the manager. Precedence = manager_map row order. Every drop
-    is flagged, never silent.
+    them would double the manager. Precedence = manager_map row order.
+
+    Returns (kept, dropped) where dropped maps each excluded CIK to a comparison
+    record (kept filer's CIK + accession, row count) that the caller persists in
+    the committed filer-status table; drops are also flagged to flags.csv.
     """
     kept: dict[int, list[ParsedFiling]] = {}
-    sigs: dict[tuple, int] = {}
+    sigs: dict[tuple, tuple[int, str]] = {}
+    dropped: dict[int, str] = {}
     for cik, plist in merged_by_cik.items():
         sig = _book_signature(plist)
         if sig and sig in sigs:
-            flag(cik, qkey, plist[0].filing.accession,
-                 f"{manager}: book identical to filer {sigs[sig]} "
-                 f"({len(sig)} rows); dropped as duplicate")
+            kept_cik, kept_acc = sigs[sig]
+            detail = (f"book identical to filer {kept_cik} acc {kept_acc} "
+                      f"({len(sig)} rows, CUSIP+class+put/call+type+shares+value "
+                      f"multiset match); excluded to avoid double-counting {manager}")
+            flag(cik, qkey, plist[0].filing.accession, f"{manager}: {detail}")
+            dropped[cik] = detail
             continue
-        sigs[sig] = cik
+        sigs[sig] = (cik, "+".join(p.filing.accession for p in plist))
         kept[cik] = plist
-    return kept
+    return kept, dropped
 
 
 def write_manager_quarter(manager: str, qkey: str,
                           merged_by_cik: dict[int, list[ParsedFiling]],
                           tickers: dict[str, str]) -> str:
-    """Write data/holdings/<manager-slug>/<qkey>.csv (all filers of the manager)."""
-    merged_by_cik = dedupe_filers(manager, qkey, merged_by_cik)
+    """Write data/holdings/<manager-slug>/<qkey>.csv (all filers of the manager).
+
+    Callers pass already-deduped filers (dedupe_filers) so exclusions are
+    recorded in the filer-status table before anything is written.
+    """
     out_dir = HOLDINGS / manager_slug(manager)
     out_dir.mkdir(parents=True, exist_ok=True)
     out_path = out_dir / f"{qkey}.csv"
