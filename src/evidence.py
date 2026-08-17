@@ -344,9 +344,8 @@ def render_report(qkey: str, run: dict, filings: list[dict],
         "## 1. Filings used",
         "",
         f"{len(filings)} filings across {window[0]}–{window[1]} "
-        f"({sum(1 for f in filings if f['role'] != 'NT_NOTICE')} parsed 13F-HR/"
-        f"13F-HR/A, {sum(1 for f in filings if f['role'] == 'NT_NOTICE')} "
-        f"13F-NT notices). `filings.csv` lists, per filing: manager, filer "
+        f"({len(parsed)} parsed 13F-HR/13F-HR/A, {len(filings) - len(parsed)} "
+        f"13F-NT notice(s)). `filings.csv` lists, per filing: manager, filer "
         f"CIK, form, accession, filing date, report period, SEC EDGAR URL, "
         f"raw-data retrieval date, merge role, and cover-page reconciliation. "
         f"Retrieval dates are the raw documents' download dates under "
