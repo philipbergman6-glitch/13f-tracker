@@ -57,6 +57,7 @@ def list_13f_filings(cik: int, earliest_report_date: str) -> list[Filing]:
     sub_path = fetch_cached(
         SUBMISSIONS_URL.format(name=_cik_url_name(cik)),
         RAW / str(cik) / "submissions.json",
+        mutable=True,
     )
     sub = load_json(sub_path)
     blocks = [sub["filings"]["recent"]]
@@ -68,6 +69,7 @@ def list_13f_filings(cik: int, earliest_report_date: str) -> list[Filing]:
             extra_path = fetch_cached(
                 SUBMISSIONS_URL.format(name=extra["name"]),
                 RAW / str(cik) / extra["name"],
+                mutable=True,
             )
             blocks.append(load_json(extra_path))
 

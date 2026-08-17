@@ -8,8 +8,8 @@ Semantics confirmed against Form 13F Special Instruction 3
 "must either restate the Form 13F report in its entirety or include only holdings
 entries that are being reported in addition to those already reported".
 
-Non-conforming amendment chains are flagged loudly: printed to stderr AND written to
-data/out/amendment_flags.csv - never silently merged.
+Non-conforming amendment chains and cross-filer duplicate books are flagged loudly:
+printed to stderr AND written to data/out/flags.csv - never silently merged.
 """
 from __future__ import annotations
 
@@ -69,10 +69,50 @@ def merge_quarter(cik: int, qkey: str, parsed: list[ParsedFiling]) -> list[Parse
     return [base] + adds
 
 
+_SIGNATURE_FIELDS = ("cusip", "class", "put_call", "sh_prn_type", "shares", "value_usd")
+
+
+def _book_signature(plist: list[ParsedFiling]) -> tuple:
+    """Order-independent fingerprint of a filer's economic book.
+
+    Administrative columns (voting authority, discretion, other_manager) are
+    excluded: duplicate sibling filings fill them inconsistently (Situational
+    Awareness 2026Q1 differs only in vote_none on 5 option rows), while an
+    identical CUSIP+shares+value multiset is still one book reported twice.
+    """
+    return tuple(sorted(tuple(row[f] for f in _SIGNATURE_FIELDS)
+                        for p in plist for row in p.rows))
+
+
+def dedupe_filers(manager: str, qkey: str,
+                  merged_by_cik: dict[int, list[ParsedFiling]],
+                  ) -> dict[int, list[ParsedFiling]]:
+    """Drop filers whose position book is identical to an earlier-listed filer's.
+
+    Two filers of one manager reporting the same rows share-for-share is one book
+    reported twice (e.g. Situational Awareness LP / Partners LP, 2026Q1); summing
+    them would double the manager. Precedence = manager_map row order. Every drop
+    is flagged, never silent.
+    """
+    kept: dict[int, list[ParsedFiling]] = {}
+    sigs: dict[tuple, int] = {}
+    for cik, plist in merged_by_cik.items():
+        sig = _book_signature(plist)
+        if sig and sig in sigs:
+            flag(cik, qkey, plist[0].filing.accession,
+                 f"{manager}: book identical to filer {sigs[sig]} "
+                 f"({len(sig)} rows); dropped as duplicate")
+            continue
+        sigs[sig] = cik
+        kept[cik] = plist
+    return kept
+
+
 def write_manager_quarter(manager: str, qkey: str,
                           merged_by_cik: dict[int, list[ParsedFiling]],
                           tickers: dict[str, str]) -> str:
     """Write data/holdings/<manager-slug>/<qkey>.csv (all filers of the manager)."""
+    merged_by_cik = dedupe_filers(manager, qkey, merged_by_cik)
     out_dir = HOLDINGS / manager_slug(manager)
     out_dir.mkdir(parents=True, exist_ok=True)
     out_path = out_dir / f"{qkey}.csv"
@@ -93,7 +133,7 @@ def write_manager_quarter(manager: str, qkey: str,
 
 def write_flags() -> None:
     OUT.mkdir(parents=True, exist_ok=True)
-    with open(OUT / "amendment_flags.csv", "w", newline="", encoding="utf-8") as fh:
+    with open(OUT / "flags.csv", "w", newline="", encoding="utf-8") as fh:
         w = csv.DictWriter(fh, fieldnames=["filer_cik", "quarter", "accession", "problem"])
         w.writeheader()
         w.writerows(_flags)

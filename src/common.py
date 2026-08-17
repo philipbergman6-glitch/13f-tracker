@@ -6,6 +6,7 @@ Source-of-truth decisions: docs/adr/0001-edgar-only-source-of-truth.md and
 from __future__ import annotations
 
 import csv
+import datetime
 import json
 import re
 import time
@@ -54,9 +55,27 @@ def http_get(url: str, retries: int = 3) -> bytes:
     raise RuntimeError("unreachable")
 
 
-def fetch_cached(url: str, dest: Path) -> Path:
-    """Download url to dest unless it already exists (data/raw is a cache)."""
+def fetch_cached(url: str, dest: Path, mutable: bool = False) -> Path:
+    """Download url to dest unless a usable cached copy exists (data/raw is a cache).
+
+    Immutable artifacts (accession documents) are cached forever. Mutable indexes
+    (mutable=True, e.g. submissions JSON — SEC updates them in place) are re-fetched
+    unless the cached copy was already retrieved today; a superseded copy is archived
+    under data/raw/_archive/superseded/<retrieval-date>/ before being replaced.
+    """
     if dest.exists() and dest.stat().st_size > 0:
+        retrieved = datetime.date.fromtimestamp(dest.stat().st_mtime)
+        if not mutable or retrieved == datetime.date.today():
+            return dest
+        body = http_get(url)
+        if body == dest.read_bytes():
+            dest.touch()  # unchanged upstream; restamp the retrieval date
+            return dest
+        archive = (RAW / "_archive" / "superseded" / retrieved.isoformat()
+                   / dest.relative_to(RAW))
+        archive.parent.mkdir(parents=True, exist_ok=True)
+        dest.replace(archive)
+        dest.write_bytes(body)
         return dest
     dest.parent.mkdir(parents=True, exist_ok=True)
     dest.write_bytes(http_get(url))
