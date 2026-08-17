@@ -1,0 +1,920 @@
+<!doctype html>
+<!-- PROTOTYPE — wayfinder ticket 05 (13f-tracker map). Throwaway; do not promote to production.
+     Three variants of the 13F dashboard, switchable via ?variant=A|B|C or the bottom bar / arrow keys.
+     Data: REAL Berkshire Hathaway 13F-HR, EDGAR CIK 1067983, accessions 0001193125-26-226661
+     (Q1-2026, filed 2026-05-15) and 0001193125-26-054580 (Q4-2025, filed 2026-02-17), retrieved 2026-08-12.
+     Sector + ticker mappings are HAND-MADE for the prototype (real build: OpenFIGI + committed ref table).
+     Cross-manager summary is ILLUSTRATIVE MOCK — only one manager is parsed. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>13F Tracker — dashboard prototype</title>
+<style>
+  :root { color-scheme: light dark; }
+  .viz-root {
+    color-scheme: light;
+    --surface-1: #fcfcfb; --page: #f9f9f7;
+    --ink-1: #0b0b0b; --ink-2: #52514e; --ink-muted: #898781;
+    --grid: #e1e0d9; --axis: #c3c2b7; --ring: rgba(11,11,11,0.10);
+    --series-1: #2a78d6; --seq-250: #86b6ef; --seq-400: #3987e5; --seq-550: #1c5cab;
+    --up: #006300; --down: #d03b3b; --mock: #b45309;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:where(:not([data-theme="light"])) .viz-root {
+      color-scheme: dark;
+      --surface-1: #1a1a19; --page: #0d0d0d;
+      --ink-1: #ffffff; --ink-2: #c3c2b7; --ink-muted: #898781;
+      --grid: #2c2c2a; --axis: #383835; --ring: rgba(255,255,255,0.10);
+      --series-1: #3987e5; --seq-250: #6da7ec; --seq-400: #3987e5; --seq-550: #86b6ef;
+      --up: #0ca30c; --down: #e66767; --mock: #d97706;
+    }
+  }
+  :root[data-theme="dark"] .viz-root {
+    color-scheme: dark;
+    --surface-1: #1a1a19; --page: #0d0d0d;
+    --ink-1: #ffffff; --ink-2: #c3c2b7; --ink-muted: #898781;
+    --grid: #2c2c2a; --axis: #383835; --ring: rgba(255,255,255,0.10);
+    --series-1: #3987e5; --seq-250: #6da7ec; --seq-400: #3987e5; --seq-550: #86b6ef;
+    --up: #0ca30c; --down: #e66767; --mock: #d97706;
+  }
+  * { box-sizing: border-box; margin: 0; }
+  body.viz-root {
+    background: var(--page); color: var(--ink-1);
+    font: 14px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  a { color: var(--series-1); }
+  .num { font-variant-numeric: tabular-nums; }
+  .panel { background: var(--surface-1); border: 1px solid var(--ring); border-radius: 8px; }
+  h1,h2,h3 { font-weight: 650; letter-spacing: -0.01em; }
+  table { border-collapse: collapse; width: 100%; }
+  th { text-align: left; color: var(--ink-muted); font-weight: 550; font-size: 11px;
+       text-transform: uppercase; letter-spacing: .05em; padding: 6px 8px; border-bottom: 1px solid var(--axis); }
+  td { padding: 6px 8px; border-bottom: 1px solid var(--grid); }
+  th.r, td.r { text-align: right; }
+  .up { color: var(--up); font-weight: 600; } .down { color: var(--down); font-weight: 600; }
+  .chip { display:inline-block; padding:1px 8px; border-radius:999px; font-size:11px; font-weight:600;
+          border:1px solid var(--ring); }
+  .mockbadge { color: var(--mock); border: 1px dashed var(--mock); border-radius: 4px;
+               font-size: 11px; font-weight: 650; padding: 1px 7px; vertical-align: middle; }
+  .src { color: var(--ink-muted); font-size: 11.5px; }
+  .barrow { display:grid; grid-template-columns: 190px 1fr 90px; gap: 8px; align-items: center; padding: 3px 0; }
+  .barrow .lbl { font-size: 12.5px; color: var(--ink-1); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .bartrack { position: relative; height: 14px; }
+  .bar { position:absolute; left:0; top:0; height: 14px; border-radius: 0 4px 4px 0; background: var(--series-1); }
+  .barrow .val { font-size: 12px; color: var(--ink-2); text-align: right; }
+  .barrow:hover .bar { filter: brightness(1.12); }
+  #tooltip { position: fixed; pointer-events: none; z-index: 50; display: none; max-width: 300px;
+             background: var(--surface-1); border: 1px solid var(--ring); border-radius: 6px;
+             box-shadow: 0 4px 14px rgba(0,0,0,.18); padding: 8px 10px; font-size: 12px; color: var(--ink-1); }
+  #tooltip .t { font-weight: 650; margin-bottom: 3px; }
+  #tooltip .row { display: flex; justify-content: space-between; gap: 16px; color: var(--ink-2); }
+  /* switcher */
+  #switcher { position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%); z-index: 60;
+              display: flex; align-items: center; gap: 4px; background: var(--ink-1); color: var(--page);
+              border-radius: 999px; padding: 6px 10px; box-shadow: 0 6px 20px rgba(0,0,0,.35); font-size: 13px; }
+  #switcher button { background: none; border: none; color: inherit; font-size: 16px; cursor: pointer; padding: 2px 8px; }
+  #switcher .vlabel { min-width: 210px; text-align: center; font-weight: 600; }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 28px 24px 90px; }
+  .protonote { font-size: 12px; color: var(--ink-muted); border-bottom: 1px solid var(--grid);
+               padding: 8px 24px; text-align: center; }
+</style>
+</head>
+<body class="viz-root">
+<div class="protonote">PROTOTYPE — ticket 05 · real Berkshire EDGAR data · sector/ticker maps hand-made · cross-manager table is mock</div>
+<div id="app" class="wrap"></div>
+<div id="tooltip"></div>
+<div id="switcher">
+  <button id="prev" aria-label="previous variant">←</button>
+  <span class="vlabel" id="vlabel"></span>
+  <button id="next" aria-label="next variant">→</button>
+</div>
+<script>
+// ---------- DATA (real, parsed 2026-08-12 from EDGAR; values in USD) ----------
+const DATA = {
+ "manager": "Berkshire Hathaway",
+ "period_now": "2026-03-31",
+ "period_prev": "2025-12-31",
+ "filed_now": "2026-05-15",
+ "acc_now": "0001193125-26-226661",
+ "filed_prev": "2026-02-17",
+ "acc_prev": "0001193125-26-054580",
+ "total_now": 263095703570,
+ "total_prev": 274160086701,
+ "n_positions_now": 29,
+ "n_positions_prev": 42,
+ "holdings": [
+  {
+   "cusip": "037833100",
+   "name": "APPLE INC",
+   "cls": "COM",
+   "value": 57843260493,
+   "shares": 227917808,
+   "put_call": "",
+   "w": 0.21986
+  },
+  {
+   "cusip": "025816109",
+   "name": "AMERICAN EXPRESS CO",
+   "cls": "COM",
+   "value": 45859204536,
+   "shares": 151610700,
+   "put_call": "",
+   "w": 0.17431
+  },
+  {
+   "cusip": "191216100",
+   "name": "COCA COLA CO",
+   "cls": "COM",
+   "value": 30420000000,
+   "shares": 400000000,
+   "put_call": "",
+   "w": 0.11562
+  },
+  {
+   "cusip": "060505104",
+   "name": "BANK AMERICA CORP",
+   "cls": "COM",
+   "value": 25039178044,
+   "shares": 513624165,
+   "put_call": "",
+   "w": 0.09517
+  },
+  {
+   "cusip": "166764100",
+   "name": "CHEVRON CORPORATION",
+   "cls": "COM",
+   "value": 17457364606,
+   "shares": 84375856,
+   "put_call": "",
+   "w": 0.06635
+  },
+  {
+   "cusip": "674599105",
+   "name": "OCCIDENTAL PETE CORP",
+   "cls": "COM",
+   "value": 17221193015,
+   "shares": 264941431,
+   "put_call": "",
+   "w": 0.06546
+  },
+  {
+   "cusip": "02079K305",
+   "name": "ALPHABET INC",
+   "cls": "CAP STK CL A",
+   "value": 15600071913,
+   "shares": 54249798,
+   "put_call": "",
+   "w": 0.05929
+  },
+  {
+   "cusip": "H1467J104",
+   "name": "CHUBB LTD SWITZ",
+   "cls": "COM",
+   "value": 11162836215,
+   "shares": 34249183,
+   "put_call": "",
+   "w": 0.04243
+  },
+  {
+   "cusip": "615369105",
+   "name": "MOODYS CORP",
+   "cls": "COM",
+   "value": 10762190653,
+   "shares": 24669778,
+   "put_call": "",
+   "w": 0.04091
+  },
+  {
+   "cusip": "500754106",
+   "name": "KRAFT HEINZ CO",
+   "cls": "COM",
+   "value": 7323527057,
+   "shares": 325634818,
+   "put_call": "",
+   "w": 0.02784
+  },
+  {
+   "cusip": "23918K108",
+   "name": "DAVITA INC",
+   "cls": "COM",
+   "value": 4626158909,
+   "shares": 30100585,
+   "put_call": "",
+   "w": 0.01758
+  },
+  {
+   "cusip": "501044101",
+   "name": "KROGER CO",
+   "cls": "COM",
+   "value": 3618000000,
+   "shares": 50000000,
+   "put_call": "",
+   "w": 0.01375
+  },
+  {
+   "cusip": "829933100",
+   "name": "SIRIUSXM HOLDINGS INC",
+   "cls": "COMMON STOCK",
+   "value": 2880548260,
+   "shares": 124807117,
+   "put_call": "",
+   "w": 0.01095
+  },
+  {
+   "cusip": "247361702",
+   "name": "DELTA AIR LINES INC",
+   "cls": "COM NEW",
+   "value": 2646532635,
+   "shares": 39809456,
+   "put_call": "",
+   "w": 0.01006
+  },
+  {
+   "cusip": "92343E102",
+   "name": "VERISIGN INC",
+   "cls": "COM",
+   "value": 2232726597,
+   "shares": 8989880,
+   "put_call": "",
+   "w": 0.00849
+  },
+  {
+   "cusip": "14040H105",
+   "name": "CAPITAL ONE FINL CORP",
+   "cls": "COM",
+   "value": 1304374500,
+   "shares": 7150000,
+   "put_call": "",
+   "w": 0.00496
+  },
+  {
+   "cusip": "650111107",
+   "name": "NEW YORK TIMES CO MTN BE",
+   "cls": "CL A",
+   "value": 1268219376,
+   "shares": 15146535,
+   "put_call": "",
+   "w": 0.00482
+  },
+  {
+   "cusip": "02005N100",
+   "name": "ALLY FINL INC",
+   "cls": "COM",
+   "value": 1137670000,
+   "shares": 29000000,
+   "put_call": "",
+   "w": 0.00432
+  },
+  {
+   "cusip": "02079K107",
+   "name": "ALPHABET INC",
+   "cls": "CAP STK CL C",
+   "value": 1028454775,
+   "shares": 3585215,
+   "put_call": "",
+   "w": 0.00391
+  },
+  {
+   "cusip": "530909308",
+   "name": "LIBERTY LIVE HOLDINGS INC",
+   "cls": "COM SHS SER C",
+   "value": 996356028,
+   "shares": 10587143,
+   "put_call": "",
+   "w": 0.00379
+  },
+  {
+   "cusip": "526057104",
+   "name": "LENNAR CORP",
+   "cls": "CL A",
+   "value": 877052911,
+   "shares": 10099642,
+   "put_call": "",
+   "w": 0.00333
+  },
+  {
+   "cusip": "670346105",
+   "name": "NUCOR CORP",
+   "cls": "COM",
+   "value": 660686383,
+   "shares": 3907075,
+   "put_call": "",
+   "w": 0.00251
+  },
+  {
+   "cusip": "530909100",
+   "name": "LIBERTY LIVE HOLDINGS INC",
+   "cls": "COM SER A",
+   "value": 456970925,
+   "shares": 4986588,
+   "put_call": "",
+   "w": 0.00174
+  },
+  {
+   "cusip": "546347105",
+   "name": "LOUISIANA PAC CORP",
+   "cls": "COM",
+   "value": 412113691,
+   "shares": 5664793,
+   "put_call": "",
+   "w": 0.00157
+  },
+  {
+   "cusip": "21036P108",
+   "name": "CONSTELLATION BRANDS INC",
+   "cls": "CL A",
+   "value": 94933500,
+   "shares": 632890,
+   "put_call": "",
+   "w": 0.00036
+  },
+  {
+   "cusip": "62944T105",
+   "name": "NVR INC",
+   "cls": "COM",
+   "value": 73226191,
+   "shares": 11112,
+   "put_call": "",
+   "w": 0.00028
+  },
+  {
+   "cusip": "55616P104",
+   "name": "MACYS INC",
+   "cls": "COM",
+   "value": 54963842,
+   "shares": 3038355,
+   "put_call": "",
+   "w": 0.00021
+  },
+  {
+   "cusip": "526057302",
+   "name": "LENNAR CORP",
+   "cls": "CL B",
+   "value": 19995576,
+   "shares": 237703,
+   "put_call": "",
+   "w": 8e-05
+  },
+  {
+   "cusip": "47233W109",
+   "name": "JEFFERIES FINANCIAL GROUP IN",
+   "cls": "COM",
+   "value": 17892939,
+   "shares": 433558,
+   "put_call": "",
+   "w": 7e-05
+  }
+ ],
+ "changes": [
+  {
+   "cusip": "02079K305",
+   "name": "ALPHABET INC",
+   "kind": "add",
+   "shares_prev": 17846142,
+   "shares_now": 54249798,
+   "value_prev": 5585842446,
+   "value_now": 15600071913,
+   "w_prev": 0.02037,
+   "w_now": 0.05929
+  },
+  {
+   "cusip": "92826C839",
+   "name": "VISA INC",
+   "kind": "exit",
+   "shares_prev": 8297460,
+   "shares_now": 0,
+   "value_prev": 2910002197,
+   "value_now": 0,
+   "w_prev": 0.01061,
+   "w_now": 0.0
+  },
+  {
+   "cusip": "247361702",
+   "name": "DELTA AIR LINES INC",
+   "kind": "new",
+   "shares_prev": 0,
+   "shares_now": 39809456,
+   "value_prev": 0,
+   "value_now": 2646532635,
+   "w_prev": 0.0,
+   "w_now": 0.01006
+  },
+  {
+   "cusip": "166764100",
+   "name": "CHEVRON CORPORATION",
+   "kind": "trim",
+   "shares_prev": 130156362,
+   "shares_now": 84375856,
+   "value_prev": 19837131131,
+   "value_now": 17457364606,
+   "w_prev": 0.07236,
+   "w_now": 0.06635
+  },
+  {
+   "cusip": "57636Q104",
+   "name": "MASTERCARD INCORPORATED",
+   "kind": "exit",
+   "shares_prev": 3986648,
+   "shares_now": 0,
+   "value_prev": 2275897610,
+   "value_now": 0,
+   "w_prev": 0.0083,
+   "w_now": 0.0
+  },
+  {
+   "cusip": "21036P108",
+   "name": "CONSTELLATION BRANDS INC",
+   "kind": "trim",
+   "shares_prev": 13000000,
+   "shares_now": 632890,
+   "value_prev": 1793480000,
+   "value_now": 94933500,
+   "w_prev": 0.00654,
+   "w_now": 0.00036
+  },
+  {
+   "cusip": "91324P102",
+   "name": "UNITEDHEALTH GROUP INC",
+   "kind": "exit",
+   "shares_prev": 5039564,
+   "shares_now": 0,
+   "value_prev": 1663610472,
+   "value_now": 0,
+   "w_prev": 0.00607,
+   "w_now": 0.0
+  },
+  {
+   "cusip": "25754A201",
+   "name": "DOMINOS PIZZA INC",
+   "kind": "exit",
+   "shares_prev": 3350000,
+   "shares_now": 0,
+   "value_prev": 1396347000,
+   "value_now": 0,
+   "w_prev": 0.00509,
+   "w_now": 0.0
+  },
+  {
+   "cusip": "G0403H108",
+   "name": "AON PLC",
+   "kind": "exit",
+   "shares_prev": 3602995,
+   "shares_now": 0,
+   "value_prev": 1271424876,
+   "value_now": 0,
+   "w_prev": 0.00464,
+   "w_now": 0.0
+  },
+  {
+   "cusip": "02079K107",
+   "name": "ALPHABET INC",
+   "kind": "new",
+   "shares_prev": 0,
+   "shares_now": 3585215,
+   "value_prev": 0,
+   "value_now": 1028454775,
+   "w_prev": 0.0,
+   "w_now": 0.00391
+  },
+  {
+   "cusip": "73278L105",
+   "name": "POOL CORP",
+   "kind": "exit",
+   "shares_prev": 3068885,
+   "shares_now": 0,
+   "value_prev": 702007444,
+   "value_now": 0,
+   "w_prev": 0.00256,
+   "w_now": 0.0
+  },
+  {
+   "cusip": "023135106",
+   "name": "AMAZON COM INC",
+   "kind": "exit",
+   "shares_prev": 2276000,
+   "shares_now": 0,
+   "value_prev": 525346320,
+   "value_now": 0,
+   "w_prev": 0.00192,
+   "w_now": 0.0
+  },
+  {
+   "cusip": "422806208",
+   "name": "HEICO CORP NEW",
+   "kind": "exit",
+   "shares_prev": 1294612,
+   "shares_now": 0,
+   "value_prev": 326798907,
+   "value_now": 0,
+   "w_prev": 0.00119,
+   "w_now": 0.0
+  },
+  {
+   "cusip": "531229755",
+   "name": "LIBERTY MEDIA CORP DEL",
+   "kind": "exit",
+   "shares_prev": 3018555,
+   "shares_now": 0,
+   "value_prev": 297357853,
+   "value_now": 0,
+   "w_prev": 0.00108,
+   "w_now": 0.0
+  },
+  {
+   "cusip": "16119P108",
+   "name": "CHARTER COMMUNICATIONS INC N",
+   "kind": "exit",
+   "shares_prev": 1060882,
+   "shares_now": 0,
+   "value_prev": 221459118,
+   "value_now": 0,
+   "w_prev": 0.00081,
+   "w_now": 0.0
+  },
+  {
+   "cusip": "512816109",
+   "name": "LAMAR ADVERTISING CO NEW",
+   "kind": "exit",
+   "shares_prev": 1202410,
+   "shares_now": 0,
+   "value_prev": 152201058,
+   "value_now": 0,
+   "w_prev": 0.00056,
+   "w_now": 0.0
+  },
+  {
+   "cusip": "G0176J109",
+   "name": "ALLEGION PLC",
+   "kind": "exit",
+   "shares_prev": 780133,
+   "shares_now": 0,
+   "value_prev": 124212776,
+   "value_now": 0,
+   "w_prev": 0.00045,
+   "w_now": 0.0
+  },
+  {
+   "cusip": "55616P104",
+   "name": "MACYS INC",
+   "kind": "new",
+   "shares_prev": 0,
+   "shares_now": 3038355,
+   "value_prev": 0,
+   "value_now": 54963842,
+   "w_prev": 0.0,
+   "w_now": 0.00021
+  },
+  {
+   "cusip": "25243Q205",
+   "name": "DIAGEO PLC",
+   "kind": "exit",
+   "shares_prev": 227750,
+   "shares_now": 0,
+   "value_prev": 19647993,
+   "value_now": 0,
+   "w_prev": 7e-05,
+   "w_now": 0.0
+  },
+  {
+   "cusip": "G9001E102",
+   "name": "LIBERTY LATIN AMERICA LTD",
+   "kind": "exit",
+   "shares_prev": 2396665,
+   "shares_now": 0,
+   "value_prev": 17711354,
+   "value_now": 0,
+   "w_prev": 6e-05,
+   "w_now": 0.0
+  },
+  {
+   "cusip": "G9001E128",
+   "name": "LIBERTY LATIN AMERICA LTD",
+   "kind": "exit",
+   "shares_prev": 1284020,
+   "shares_now": 0,
+   "value_prev": 9578789,
+   "value_now": 0,
+   "w_prev": 3e-05,
+   "w_now": 0.0
+  },
+  {
+   "cusip": "047726302",
+   "name": "ATLANTA BRAVES HLDGS INC",
+   "kind": "exit",
+   "shares_prev": 115428,
+   "shares_now": 0,
+   "value_prev": 4553634,
+   "value_now": 0,
+   "w_prev": 2e-05,
+   "w_now": 0.0
+  }
+ ],
+ "options": []
+};
+
+// PROTOTYPE hand-mapping — real build derives these from OpenFIGI + a committed sector ref table.
+const META = {
+"037833100":["AAPL","Information Technology"],"025816109":["AXP","Financials"],
+"191216100":["KO","Consumer Staples"],"060505104":["BAC","Financials"],
+"166764100":["CVX","Energy"],"674599105":["OXY","Energy"],
+"02079K305":["GOOGL","Communication Services"],"02079K107":["GOOG","Communication Services"],
+"H1467J104":["CB","Financials"],"615369105":["MCO","Financials"],
+"500754106":["KHC","Consumer Staples"],"23918K108":["DVA","Health Care"],
+"501044101":["KR","Consumer Staples"],"829933100":["SIRI","Communication Services"],
+"247361702":["DAL","Industrials"],"92343E102":["VRSN","Information Technology"],
+"14040H105":["COF","Financials"],"650111107":["NYT","Communication Services"],
+"02005N100":["ALLY","Financials"],"530909308":["LLYVK","Communication Services"],
+"530909100":["LLYVA","Communication Services"],"526057104":["LEN","Consumer Discretionary"],
+"526057302":["LEN.B","Consumer Discretionary"],"670346105":["NUE","Materials"],
+"546347105":["LPX","Materials"],"21036P108":["STZ","Consumer Staples"],
+"62944T105":["NVR","Consumer Discretionary"],"55616P104":["M","Consumer Discretionary"],
+"47233W109":["JEF","Financials"],
+// prev-quarter-only names (for change rows)
+"92826C839":["V","Financials"],"57636Q104":["MA","Financials"],"91324P102":["UNH","Health Care"],
+"25754A201":["DPZ","Consumer Discretionary"],"G0403H108":["AON","Financials"],
+"73278L105":["POOL","Industrials"],"023135106":["AMZN","Consumer Discretionary"],
+"422806208":["HEI.A","Industrials"],"531229607":["FWONK","Communication Services"],
+"16119P108":["CHTR","Communication Services"],"512816109":["LAMR","Real Estate"],
+"G0176J109":["ALLE","Industrials"],"25243Q205":["DEO","Consumer Staples"],
+"G5480U120":["LILA","Communication Services"],"G5480U104":["LILAK","Communication Services"],
+"047726104":["BATRK","Communication Services"]};
+
+// AUM comparator — real: Berkshire 10-Q equity securities at fair value, 2026-06-30
+// (EDGAR XBRL companyconcept EquitySecuritiesFvNi, filed 2026-08-10). NOTE as-of mismatch vs 13F 2026-03-31.
+const AUM = { label: "Equity securities at fair value (10-Q)", value: 323779000000,
+              asof: "2026-06-30", note: "13F misses foreign-listed (e.g. Japan trading houses) & non-13F assets" };
+
+// ILLUSTRATIVE MOCK — cross-manager summary sketch (only Berkshire is parsed).
+const MOCK_CROSS = {
+  bought: [
+    {t:"NVDA", n:"NVIDIA Corp", mgrs:["Coatue","Viking","Tiger Global","Lone Pine","Altimeter"]},
+    {t:"GOOGL", n:"Alphabet Inc", mgrs:["Berkshire","Third Point","Maverick","TCI"]},
+    {t:"MSFT", n:"Microsoft Corp", mgrs:["Fundsmith","Lindsell Train","Giverny"]},
+    {t:"DAL", n:"Delta Air Lines", mgrs:["Berkshire","Appaloosa"]}],
+  sold: [
+    {t:"AAPL", n:"Apple Inc", mgrs:["Atreides","Maverick","Greenlight"]},
+    {t:"V", n:"Visa Inc", mgrs:["Berkshire","Pershing Square","Giverny"]},
+    {t:"UNH", n:"UnitedHealth", mgrs:["Berkshire","Viking"]}]
+};
+
+const fmtB = v => "$" + (v/1e9).toFixed(v >= 1e10 ? 1 : 2) + "bn";
+const fmtM = v => v >= 1e9 ? fmtB(v) : "$" + (v/1e6).toFixed(0) + "m";
+const pct = w => (w*100).toFixed(2) + "%";
+const tk = c => (META[c]||["—","Unmapped"])[0];
+const sec = c => (META[c]||["?","Unmapped (prototype)"])[1];
+
+function sectorAgg() {
+  const m = new Map();
+  for (const h of DATA.holdings) m.set(sec(h.cusip), (m.get(sec(h.cusip))||0) + h.value);
+  return [...m.entries()].sort((a,b)=>b[1]-a[1]);
+}
+function issuerHoldings(n) { // holdings merged across share classes by ticker-name, top n + Other
+  const rows = DATA.holdings.slice();
+  const top = rows.slice(0, n), rest = rows.slice(n);
+  return { top, other: rest.reduce((s,h)=>s+h.value,0), otherCount: rest.length };
+}
+
+// ---------- shared components ----------
+const tip = document.getElementById("tooltip");
+function bindTips(root) {
+  root.querySelectorAll("[data-tip]").forEach(el => {
+    el.addEventListener("mousemove", e => {
+      tip.innerHTML = el.dataset.tip; tip.style.display = "block";
+      const x = Math.min(e.clientX + 14, innerWidth - 320);
+      tip.style.left = x + "px"; tip.style.top = (e.clientY + 14) + "px";
+    });
+    el.addEventListener("mouseleave", () => tip.style.display = "none");
+  });
+}
+function bars(items, maxV, valFn) { // horizontal bar list, single series
+  return items.map(it => `
+    <div class="barrow" data-tip="${it.tip.replace(/"/g,'&quot;')}">
+      <span class="lbl">${it.label}</span>
+      <span class="bartrack"><span class="bar" style="width:${(it.value/maxV*100).toFixed(2)}%"></span></span>
+      <span class="val num">${valFn(it.value)}</span>
+    </div>`).join("");
+}
+function chgWord(k){ return {new:"NEW BUY", add:"ADD", trim:"TRIM", exit:"EXIT"}[k]; }
+function chgClass(k){ return (k==="new"||k==="add") ? "up" : "down"; }
+function chgArrow(k){ return (k==="new"||k==="add") ? "▲" : "▼"; }
+function chgDetail(c) {
+  if (c.kind==="new")  return `0 → ${c.shares_now.toLocaleString()} sh (${pct(c.w_now)} of book)`;
+  if (c.kind==="exit") return `${c.shares_prev.toLocaleString()} sh → 0 (was ${pct(c.w_prev)})`;
+  const p = ((c.shares_now-c.shares_prev)/c.shares_prev*100).toFixed(0);
+  return `${c.shares_prev.toLocaleString()} → ${c.shares_now.toLocaleString()} sh (${p>0?"+":""}${p}%), wt ${pct(c.w_prev)} → ${pct(c.w_now)}`;
+}
+function changesTable(changes) {
+  return `<table><thead><tr><th>Action</th><th>Ticker</th><th>Issuer</th><th class="r">Shares Δ</th><th class="r">Wt now</th></tr></thead><tbody>` +
+  changes.map(c => `<tr>
+    <td><span class="${chgClass(c.kind)}">${chgArrow(c.kind)} ${chgWord(c.kind)}</span></td>
+    <td class="num">${tk(c.cusip)}</td><td>${c.name}</td>
+    <td class="r num src">${chgDetail(c)}</td>
+    <td class="r num">${pct(c.w_now)}</td></tr>`).join("") + "</tbody></table>";
+}
+function crossTable() {
+  const row = (r, dir) => `<tr>
+    <td><span class="${dir==='b'?'up':'down'}">${dir==='b'?'▲ Bought':'▼ Sold'}</span></td>
+    <td class="num">${r.t}</td><td>${r.n}</td>
+    <td class="r num">${r.mgrs.length}</td><td class="src">${r.mgrs.join(", ")}</td></tr>`;
+  return `<div style="overflow-x:auto"><table><thead><tr><th>Direction</th><th>Ticker</th><th>Name</th><th class="r"># Mgrs</th><th>Managers</th></tr></thead>
+  <tbody>${MOCK_CROSS.bought.map(r=>row(r,'b')).join("")}${MOCK_CROSS.sold.map(r=>row(r,'s')).join("")}</tbody></table></div>`;
+}
+function sources() {
+  return `<p class="src" style="margin-top:18px">Sources: SEC EDGAR 13F-HR, Berkshire Hathaway Inc (CIK 1067983) —
+  Q1-2026 accession ${DATA.acc_now} (filed ${DATA.filed_now}), Q4-2025 accession ${DATA.acc_prev} (filed ${DATA.filed_prev}), retrieved 2026-08-12.
+  AUM comparator: 10-Q equity securities at fair value $323.8bn as of ${AUM.asof} (EDGAR XBRL, filed 2026-08-10) —
+  note the as-of mismatch vs the 13F period ${DATA.period_now}. Sector &amp; ticker mappings are prototype hand-maps.
+  Change thresholds per repo CONTEXT.md (share-count based). Main book = shares only; no put/call rows this quarter.</p>`;
+}
+function heroTiles(compact) {
+  const d = DATA.total_now - DATA.total_prev, dp = d/DATA.total_prev*100;
+  const cov = DATA.total_now/AUM.value*100;
+  const tile = (k,v,sub,cls) => `<div class="panel" style="padding:${compact?'10px 14px':'16px 20px'};flex:1;min-width:170px">
+    <div class="src">${k}</div><div class="num ${cls||''}" style="font-size:${compact?'20px':'26px'};font-weight:650">${v}</div>
+    <div class="src">${sub}</div></div>`;
+  return `<div style="display:flex;gap:12px;flex-wrap:wrap;margin:14px 0 22px">
+    ${tile("13F main book · " + DATA.period_now, fmtB(DATA.total_now), DATA.n_positions_now + " positions")}
+    ${tile("QoQ change", (d<0?"−":"+") + fmtB(Math.abs(d)).slice(1), (dp<0?"−":"+")+Math.abs(dp).toFixed(1)+"% vs " + DATA.period_prev, d<0?"down":"up")}
+    ${tile("Equity portfolio per 10-Q", fmtB(AUM.value), "as of " + AUM.asof + " — later than 13F")}
+    ${tile("13F coverage of 10-Q equities", cov.toFixed(0) + "%", "gap ≈ foreign-listed + timing")}
+  </div>`;
+}
+
+// ---------- Variant A — "Quarterly report" (single-column narrative) ----------
+function renderA(el) {
+  const {top, other, otherCount} = issuerHoldings(15);
+  const maxV = top[0].value;
+  const items = top.map(h => ({label: tk(h.cusip) + " · " + h.name, value: h.value,
+    tip: `<div class="t">${h.name}</div><div class="row"><span>Value</span><span>${fmtM(h.value)}</span></div>
+          <div class="row"><span>Weight</span><span>${pct(h.w)}</span></div>
+          <div class="row"><span>Shares</span><span>${h.shares.toLocaleString()}</span></div>
+          <div class="row"><span>Sector</span><span>${sec(h.cusip)}</span></div>`}));
+  const sa = sectorAgg(); const maxS = sa[0][1];
+  el.innerHTML = `
+  <header style="border-bottom:2px solid var(--ink-1);padding-bottom:14px;margin-bottom:6px">
+    <div class="src">GEMS Investment Research · 13F Tracker · quarterly report</div>
+    <h1 style="font-size:30px;margin-top:4px">Berkshire Hathaway — Q1 2026</h1>
+    <div class="src">13F-HR period ${DATA.period_now}, filed ${DATA.filed_now} · previous ${DATA.period_prev}</div>
+  </header>
+  ${heroTiles(false)}
+  <section class="panel" style="padding:20px;margin-bottom:18px">
+    <h2 style="font-size:17px;margin-bottom:10px">Top positions <span class="src" style="font-weight:400">— main book, top 15 of ${DATA.n_positions_now}</span></h2>
+    ${bars(items, maxV, fmtM)}
+    <div class="src" style="margin-top:6px">+ ${otherCount} smaller positions totalling ${fmtM(other)}</div>
+  </section>
+  <section class="panel" style="padding:20px;margin-bottom:18px">
+    <h2 style="font-size:17px;margin-bottom:10px">Significant changes <span class="src" style="font-weight:400">— vs ${DATA.period_prev}, share-count based</span></h2>
+    ${changesTable(DATA.changes)}
+  </section>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px">
+    <section class="panel" style="padding:20px">
+      <h2 style="font-size:17px;margin-bottom:10px">Sector mix <span class="src" style="font-weight:400">— prototype hand-map</span></h2>
+      ${bars(sa.map(([s,v])=>({label:s,value:v,tip:`<div class="t">${s}</div><div class="row"><span>Value</span><span>${fmtM(v)}</span></div><div class="row"><span>Weight</span><span>${pct(v/DATA.total_now)}</span></div>`})), maxS, v=>pct(v/DATA.total_now))}
+    </section>
+    <section class="panel" style="padding:20px">
+      <h2 style="font-size:17px;margin-bottom:10px">Cross-manager signals <span class="mockbadge">ILLUSTRATIVE MOCK</span></h2>
+      ${crossTable()}
+    </section>
+  </div>
+  ${sources()}`;
+}
+
+// ---------- Variant B — "Desk terminal" (dense grid + manager rail) ----------
+const MANAGERS = ["Berkshire Hathaway","Appaloosa","Altimeter","Atreides","Coatue","Fairholme","Fundsmith","Giverny","Greenlight","Icahn","Leon Cooperman","Lindsell Train","Lone Pine","Maverick","Pershing Square","Situational Awareness","TCI","Third Point","Tiger Global","Viking Global"];
+function renderB(el) {
+  const {top} = issuerHoldings(29);
+  const sa = sectorAgg(); const maxS = sa[0][1];
+  el.innerHTML = `
+  <div style="display:grid;grid-template-columns:185px 1fr;gap:16px">
+    <nav class="panel" style="padding:8px;align-self:start;position:sticky;top:12px">
+      <div class="src" style="padding:4px 8px">MANAGERS · Q1 2026</div>
+      ${MANAGERS.map(m => m === "Berkshire Hathaway"
+        ? `<div style="background:var(--series-1);color:#fff;border-radius:5px;padding:5px 8px;font-weight:600;font-size:12.5px">${m}</div>`
+        : `<div class="src" style="padding:5px 8px;font-size:12.5px">${m} <span style="opacity:.55">· n/a (prototype)</span></div>`).join("")}
+    </nav>
+    <main>
+      <div style="display:flex;align-items:baseline;gap:14px;margin-bottom:4px">
+        <h1 style="font-size:21px">Berkshire Hathaway</h1>
+        <span class="src">Q1-2026 (filed ${DATA.filed_now}) vs Q4-2025 · CIK 1067983</span>
+      </div>
+      ${heroTiles(true)}
+      <div style="display:grid;grid-template-columns:1.25fr 1fr;gap:14px">
+        <section class="panel" style="padding:12px 14px">
+          <h3 style="font-size:13px;margin-bottom:6px">HOLDINGS — full main book (${DATA.n_positions_now})</h3>
+          <div style="max-height:420px;overflow-y:auto">
+          <table><thead><tr><th>Ticker</th><th>Issuer</th><th class="r">Value</th><th class="r">Wt</th><th class="r">Shares</th><th>Sector</th></tr></thead><tbody>
+          ${top.map(h=>`<tr data-tip="<div class='t'>${h.name}</div><div class='row'><span>Class</span><span>${h.cls}</span></div><div class='row'><span>CUSIP</span><span>${h.cusip}</span></div>">
+            <td class="num" style="font-weight:600">${tk(h.cusip)}</td><td style="font-size:12px">${h.name}</td>
+            <td class="r num">${fmtM(h.value)}</td><td class="r num">${pct(h.w)}</td>
+            <td class="r num src">${h.shares.toLocaleString()}</td><td class="src">${sec(h.cusip)}</td></tr>`).join("")}
+          </tbody></table></div>
+        </section>
+        <div style="display:flex;flex-direction:column;gap:14px">
+          <section class="panel" style="padding:12px 14px">
+            <h3 style="font-size:13px;margin-bottom:6px">SIGNIFICANT CHANGES (${DATA.changes.length})</h3>
+            <div style="max-height:250px;overflow-y:auto">
+            ${DATA.changes.map(c=>`<div style="display:flex;gap:8px;align-items:baseline;padding:3px 0;border-bottom:1px solid var(--grid)"
+               data-tip="<div class='t'>${c.name}</div><div class='row'><span>Detail</span><span>${chgDetail(c)}</span></div>">
+              <span class="${chgClass(c.kind)}" style="font-size:11px;min-width:64px">${chgArrow(c.kind)} ${chgWord(c.kind)}</span>
+              <span class="num" style="font-weight:600;min-width:52px">${tk(c.cusip)}</span>
+              <span class="src" style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${c.name}</span>
+              <span class="num src">${pct(c.w_now)}</span></div>`).join("")}</div>
+          </section>
+          <section class="panel" style="padding:12px 14px">
+            <h3 style="font-size:13px;margin-bottom:6px">SECTOR MIX <span class="src" style="font-weight:400">(hand-map)</span></h3>
+            ${bars(sa.map(([s,v])=>({label:s,value:v,tip:`<div class="t">${s}</div><div class="row"><span>${fmtM(v)}</span><span>${pct(v/DATA.total_now)}</span></div>`})), maxS, v=>pct(v/DATA.total_now))}
+          </section>
+        </div>
+      </div>
+      <section class="panel" style="padding:12px 14px;margin-top:14px">
+        <h3 style="font-size:13px;margin-bottom:6px">CROSS-MANAGER SIGNALS <span class="mockbadge">ILLUSTRATIVE MOCK</span></h3>
+        ${crossTable()}
+      </section>
+      ${sources()}
+    </main>
+  </div>`;
+}
+
+// ---------- Variant C — "Cross-manager first" (overview landing + drill-down) ----------
+function renderC(el) {
+  const {top} = issuerHoldings(10);
+  const maxV = top[0].value;
+  el.innerHTML = `
+  <header style="margin-bottom:16px">
+    <h1 style="font-size:24px">13F Tracker <span class="src" style="font-size:14px;font-weight:400">· Q1 2026 season · 20 managers (1 live in prototype)</span></h1>
+  </header>
+  <section class="panel" style="padding:18px 20px;margin-bottom:16px">
+    <h2 style="font-size:16px;margin-bottom:8px">Consensus moves this quarter <span class="mockbadge">ILLUSTRATIVE MOCK</span></h2>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+      <div><div class="src" style="margin-bottom:4px">MOST BOUGHT</div>
+        ${MOCK_CROSS.bought.map(r=>`<div style="display:flex;gap:10px;padding:5px 0;border-bottom:1px solid var(--grid);align-items:baseline">
+          <span class="num up" style="min-width:44px">▲ ${r.mgrs.length}</span>
+          <span style="font-weight:600;min-width:56px" class="num">${r.t}</span>
+          <span class="src" style="flex:1">${r.mgrs.join(", ")}</span></div>`).join("")}</div>
+      <div><div class="src" style="margin-bottom:4px">MOST SOLD</div>
+        ${MOCK_CROSS.sold.map(r=>`<div style="display:flex;gap:10px;padding:5px 0;border-bottom:1px solid var(--grid);align-items:baseline">
+          <span class="num down" style="min-width:44px">▼ ${r.mgrs.length}</span>
+          <span style="font-weight:600;min-width:56px" class="num">${r.t}</span>
+          <span class="src" style="flex:1">${r.mgrs.join(", ")}</span></div>`).join("")}</div>
+    </div>
+  </section>
+  <div class="src" style="margin:4px 2px 8px">MANAGERS — click a card to drill down (only Berkshire live in prototype)</div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(215px,1fr));gap:10px;margin-bottom:20px">
+    <div class="panel" style="padding:12px;border-color:var(--series-1);border-width:2px">
+      <div style="font-weight:650">Berkshire Hathaway</div>
+      <div class="num" style="font-size:19px;font-weight:650">${fmtB(DATA.total_now)}</div>
+      <div class="src">${DATA.n_positions_now} pos · <span class="down">−4.0% QoQ</span> · ${DATA.changes.length} sig. changes</div>
+    </div>
+    ${MANAGERS.slice(1,8).map(m=>`<div class="panel" style="padding:12px;opacity:.5">
+      <div style="font-weight:650">${m}</div><div class="src">n/a in prototype</div></div>`).join("")}
+  </div>
+  <section class="panel" style="padding:18px 20px">
+    <h2 style="font-size:16px;margin-bottom:2px">Berkshire Hathaway — drill-down</h2>
+    <div class="src" style="margin-bottom:10px">Q1-2026 vs Q4-2025 · EDGAR CIK 1067983</div>
+    ${heroTiles(true)}
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px">
+      <div>
+        <h3 style="font-size:14px;margin-bottom:6px">Top 10 positions</h3>
+        ${bars(top.map(h=>({label:tk(h.cusip)+" · "+h.name.split(" ").slice(0,2).join(" "),value:h.value,
+          tip:`<div class="t">${h.name}</div><div class="row"><span>Value</span><span>${fmtM(h.value)}</span></div><div class="row"><span>Weight</span><span>${pct(h.w)}</span></div>`})), maxV, fmtM)}
+      </div>
+      <div>
+        <h3 style="font-size:14px;margin-bottom:6px">What changed</h3>
+        <div style="max-height:330px;overflow-y:auto">${changesTable(DATA.changes.slice(0,12))}</div>
+        <div class="src" style="margin-top:4px">${DATA.changes.length-12>0 ? "+ "+(DATA.changes.length-12)+" more in table view" : ""}</div>
+      </div>
+    </div>
+    ${sources()}
+  </section>`;
+}
+
+// ---------- switcher ----------
+const VARIANTS = [["A","Quarterly report", renderA],["B","Desk terminal", renderB],["C","Cross-manager first", renderC]];
+function currentKey() {
+  const q = new URLSearchParams(location.search).get("variant") || (location.hash||"").replace("#","");
+  return VARIANTS.some(v=>v[0]===q) ? q : "A";
+}
+function show(key) {
+  const [k, name, fn] = VARIANTS.find(v=>v[0]===key);
+  const el = document.getElementById("app");
+  fn(el); bindTips(el);
+  document.getElementById("vlabel").textContent = `${k} — ${name}`;
+  try { history.replaceState(null,"", location.pathname + "?variant=" + k); }
+  catch(e) { location.hash = k; }   // file:// fallback in some browsers
+  document.title = `13F prototype — ${k} ${name}`;
+}
+function cycle(d) {
+  const i = VARIANTS.findIndex(v=>v[0]===currentKey());
+  show(VARIANTS[(i+d+VARIANTS.length)%VARIANTS.length][0]);
+}
+document.getElementById("prev").onclick = ()=>cycle(-1);
+document.getElementById("next").onclick = ()=>cycle(1);
+addEventListener("keydown", e => {
+  if (["INPUT","TEXTAREA"].includes(document.activeElement.tagName) || document.activeElement.isContentEditable) return;
+  if (e.key==="ArrowLeft") cycle(-1); if (e.key==="ArrowRight") cycle(1);
+});
+show(currentKey());
+</script>
+</body>
+</html>
