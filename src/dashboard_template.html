@@ -133,7 +133,6 @@ section { margin-bottom: 40px; }
   font-size: 40px; font-weight: 550; line-height: 1.12;
   letter-spacing: -.005em; text-wrap: balance; margin: 2px 0 10px;
 }
-.lead-text .sub { color: var(--ink-2); font-size: 14px; max-width: 62ch; }
 .lead-hero { margin-left: auto; text-align: right; }
 .lead-hero .heroval { font-size: 52px; font-weight: 640; line-height: 1.05; letter-spacing: -.01em; }
 .lead-hero .herolabel { color: var(--muted); font-size: 12px; margin-top: 4px; }
@@ -409,10 +408,6 @@ function renderLanding() {
   const lt = el("div", "lead-text");
   lt.append(el("div", "eyebrow", "GEMS Investment Research"));
   lt.append(el("h1", "serif", "Twenty managers, quarter by quarter"));
-  lt.append(el("div", "sub",
-    "Quarter-final SEC EDGAR 13F holdings for the firm's tracked manager list — " +
-    "portfolio value against external AUM, significant position changes, and the " +
-    "moves several managers made together. As of " + DATA.as_of_label + " filings."));
   const hero = el("div", "lead-hero");
   hero.append(el("div", "heroval num", fmtUSD(DATA.combined_value)));
   hero.append(el("div", "herolabel",
