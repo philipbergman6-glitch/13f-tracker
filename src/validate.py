@@ -28,16 +28,19 @@ Checks:
 from __future__ import annotations
 
 import csv
+import hashlib
+import json
 import re
 import sys
-from collections import defaultdict
+from collections import Counter, defaultdict
 from dataclasses import dataclass, fields
 from pathlib import Path
 
-from common import OUT
+from common import OUT, REF
 from edgar import ParsedFiling
 
 VALIDATION_PATH = OUT / "validation.csv"
+WARNING_DISPOSITIONS_PATH = REF / "warning_dispositions.csv"
 
 PRICE_MIN, PRICE_MAX = 0.001, 2_000_000
 QOQ_SHARE_RATIO = 100
@@ -59,6 +62,65 @@ class Finding:
     accession: str
     cusip: str
     detail: str
+
+
+WARNING_FIELDS = tuple(f.name for f in fields(Finding))
+DISPOSITION_REQUIRED_FIELDS = (
+    "warning_fingerprint", "classification", "resolution", "reference",
+    "reviewed_by", "reviewed_date",
+)
+
+
+def _row_value(row, name: str) -> str:
+    get = (lambda name: getattr(row, name)) if isinstance(row, Finding) \
+        else (lambda name: row.get(name, ""))
+    return str(get(name) or "").strip()
+
+
+def warning_fingerprint(row) -> str:
+    """SHA-256 identity of the complete warning, including source and detail."""
+    payload = {name: _row_value(row, name) for name in WARNING_FIELDS}
+    encoded = json.dumps(payload, sort_keys=True, separators=(",", ":"))
+    return hashlib.sha256(encoded.encode("utf-8")).hexdigest()
+
+
+def warning_disposition_coverage(findings: list[Finding | dict],
+                                 dispositions: list[dict]) -> dict:
+    """Return exact coverage plus stale, duplicate, and incomplete reviews."""
+    warnings = [row for row in findings if _row_value(row, "level") == "WARN"]
+    warning_by_fingerprint = {warning_fingerprint(row): row for row in warnings}
+    complete = [row for row in dispositions
+                if all(_row_value(row, name)
+                       for name in DISPOSITION_REQUIRED_FIELDS)]
+    counts = Counter(_row_value(row, "warning_fingerprint") for row in complete)
+    reviewed = set(counts)
+    expected = set(warning_by_fingerprint)
+    return {
+        "warnings": warnings,
+        "missing": [row for fingerprint, row in warning_by_fingerprint.items()
+                    if fingerprint not in reviewed],
+        "orphan_fingerprints": sorted(reviewed - expected),
+        "duplicate_fingerprints": sorted(
+            fingerprint for fingerprint, count in counts.items() if count > 1),
+        "incomplete_rows": len(dispositions) - len(complete),
+    }
+
+
+def load_warning_dispositions(
+        path: Path = WARNING_DISPOSITIONS_PATH) -> list[dict]:
+    if not path.exists():
+        return []
+    with open(path, newline="", encoding="utf-8") as fh:
+        return list(csv.DictReader(fh))
+
+
+def unresolved_warning_findings(
+        findings: list[Finding],
+        path: Path = WARNING_DISPOSITIONS_PATH) -> list[Finding]:
+    """Warnings lacking a complete, attributable disposition record."""
+    coverage = warning_disposition_coverage(
+        findings, load_warning_dispositions(path))
+    return coverage["missing"]
 
 
 def _warn(f: Finding) -> None:

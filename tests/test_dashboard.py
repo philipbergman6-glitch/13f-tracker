@@ -5,6 +5,7 @@ Run:  python -m unittest discover -s tests -v
 from __future__ import annotations
 
 import sys
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -172,11 +173,24 @@ class TestRunStatusSummary(unittest.TestCase):
     def test_ok_run_is_passed_with_counts(self):
         s = db.run_status_summary({"ok": True, "completed_utc": "2026-08-17T16:40:48+00:00",
                                    "validation_errors": 0, "validation_warnings": 42,
+                                   "validation_warnings_dispositioned": 42,
                                    "blocked": []})
         self.assertEqual(s["state"], "passed")
         self.assertIn("0 validation errors", s["label"])
         self.assertIn("42 warnings", s["label"])
+        self.assertIn("42 dispositioned", s["label"])
+        self.assertNotIn("reviewed", s["label"])
         self.assertEqual(s["completed_utc"], "2026-08-17T16:40:48+00:00")
+
+    def test_ok_run_cannot_claim_unrecorded_warning_review(self):
+        s = db.run_status_summary({"ok": True,
+                                   "validation_errors": 0,
+                                   "validation_warnings": 42,
+                                   "validation_warnings_dispositioned": 41,
+                                   "blocked": []})
+        self.assertIn("42 warnings", s["label"])
+        self.assertIn("41 dispositioned", s["label"])
+        self.assertNotIn("reviewed", s["label"])
 
     def test_failed_run_is_failed_with_reasons(self):
         s = db.run_status_summary({"ok": False, "blocked": ["Mgr 2026Q2"],
@@ -185,6 +199,15 @@ class TestRunStatusSummary(unittest.TestCase):
         self.assertIn("FAILED", s["label"])
         self.assertIn("1 manager-quarter(s) blocked", s["label"])
         self.assertIn("3 validation errors", s["label"])
+
+    def test_failed_run_reports_warning_disposition_gate(self):
+        s = db.run_status_summary({
+            "ok": False, "validation_errors": 0,
+            "unresolved_validation_warnings": [{"check": "identity"}],
+            "invalid_warning_dispositions": 2,
+        })
+        self.assertIn("1 unresolved warnings", s["label"])
+        self.assertIn("2 invalid warning dispositions", s["label"])
 
     def test_missing_run_is_unknown(self):
         s = db.run_status_summary(None)
@@ -195,6 +218,21 @@ class TestRunStatusSummary(unittest.TestCase):
         self.assertIn(payload["run_status"]["state"],
                       {"passed", "failed", "unknown"})
         self.assertIn("UTC", payload["generated_utc"])
+
+
+class TestDataQualityNotes(unittest.TestCase):
+    def test_loads_only_row_level_filer_anomalies(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "known_exceptions.csv"
+            path.write_text(
+                "manager,quarter,category,summary,resolution,reference\n"
+                "Giverny,2026Q2,filer-value-anomaly,Bad value,Preserve,SEC\n"
+                "Giverny,2026Q2,scope-out,Not a row anomaly,Document,SEC\n",
+                encoding="utf-8")
+            notes = db.load_data_quality_notes(path)
+        self.assertEqual(list(notes), [("Giverny", "2026Q2")])
+        self.assertEqual(notes[("Giverny", "2026Q2")][0]["summary"],
+                         "Bad value")
 
 
 class TestConsensus(unittest.TestCase):

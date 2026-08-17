@@ -35,11 +35,13 @@ from pathlib import Path
 from common import (HOLDINGS, OUT, RAW, REF, REPO, load_manager_map,
                     quarter_end_date, quarter_range, report_date_to_qkey)
 from edgar import filing_index_url
+import validate
 
 EVIDENCE_DIR = REPO / "docs" / "evidence"
 DASHBOARD_HTML = REPO / "dashboard" / "index.html"
 RUN_STATUS_PATH = OUT / "run_status.json"
 EXCEPTIONS_PATH = REF / "known_exceptions.csv"
+WARNING_DISPOSITIONS_PATH = REF / "warning_dispositions.csv"
 
 FILINGS_COLUMNS = [
     "quarter", "manager", "filer_cik", "filer_name", "form", "accession",
@@ -65,6 +67,7 @@ REQUIRED_ITEMS = [
     ("Parsed-vs-source reconciliation (rows and values)", "filings.csv"),
     ("Amendment-merge and duplicate decisions", "merge_decisions.csv"),
     ("Multi-filer completeness", "filer_status.csv"),
+    ("Warning classifications and dispositions", "warning_dispositions.csv"),
     ("Automated test results", "test_results.json"),
     ("Known exceptions and reviewer sign-off", "exceptions.csv + report.md"),
     ("SHA-256 checksums and source version", "checksums.csv + manifest.json"),
@@ -73,6 +76,27 @@ REQUIRED_ITEMS = [
 
 def fail(msg: str) -> None:
     raise SystemExit(f"evidence: {msg}")
+
+
+def check_warning_dispositions(validation: list[dict],
+                               dispositions: list[dict]) -> dict[str, int]:
+    """Require exact, complete, non-stale disposition coverage."""
+    coverage = validate.warning_disposition_coverage(validation, dispositions)
+    problems = []
+    if coverage["missing"]:
+        problems.append(f"{len(coverage['missing'])} missing")
+    if coverage["orphan_fingerprints"]:
+        problems.append(f"{len(coverage['orphan_fingerprints'])} stale/orphan")
+    if coverage["duplicate_fingerprints"]:
+        problems.append(f"{len(coverage['duplicate_fingerprints'])} duplicate")
+    if coverage["incomplete_rows"]:
+        problems.append(f"{coverage['incomplete_rows']} incomplete")
+    if problems:
+        fail("validation warning disposition coverage invalid: "
+             + ", ".join(problems))
+    warnings = coverage["warnings"]
+    return {"warnings": len(warnings), "dispositioned": len(warnings),
+            "unresolved": 0}
 
 
 def read_csv(path: Path) -> list[dict]:
@@ -312,7 +336,8 @@ def _md_table(columns: list[str], rows: list[list]) -> str:
 
 def render_report(qkey: str, run: dict, filings: list[dict],
                   merge_decisions: list[dict], filer_status: list[dict],
-                  validation: list[dict], exceptions: list[dict],
+                  validation: list[dict], dispositions: list[dict],
+                  exceptions: list[dict],
                   tests: dict, git: dict, checksums: dict[str, str],
                   generated_utc: str) -> str:
     window = run["window"]
@@ -331,6 +356,10 @@ def render_report(qkey: str, run: dict, filings: list[dict],
     val_counts = defaultdict(int)
     for v in validation:
         val_counts[v["level"]] += 1
+    disposition_stats = check_warning_dispositions(validation, dispositions)
+    disposition_classes = defaultdict(int)
+    for row in dispositions:
+        disposition_classes[row["classification"]] += 1
     dirty = git["dirty_files"]
     dash_rel = str(DASHBOARD_HTML.relative_to(REPO)).replace("\\", "/")
 
@@ -422,9 +451,14 @@ def render_report(qkey: str, run: dict, filings: list[dict],
         "## 5. Validation findings",
         "",
         f"{val_counts.get('ERROR', 0)} errors, {val_counts.get('WARN', 0)} "
-        f"warnings (`validation.csv`; errors block publication). Warning "
-        f"classes are calibrated against accepted SEC filings — see "
-        f"`notes/phase2-production-controls.md`.",
+        f"warnings (`validation.csv`); "
+        f"**{disposition_stats['dispositioned']} dispositioned and "
+        f"{disposition_stats['unresolved']} unresolved**. Errors and any "
+        f"undispositioned warning block publication. `warning_dispositions.csv` "
+        f"records the classification, resolution, evidence reference, reviewer, "
+        f"and review date for every warning. Classification counts: "
+        + ", ".join(f"{name}={count}" for name, count in
+                    sorted(disposition_classes.items())) + ".",
         "",
         "## 6. Automated tests",
         "",
@@ -509,8 +543,10 @@ def build_package(qkey: str) -> Path:
     merge_decisions = read_csv(OUT / "merge_decisions.csv")
     filer_status = read_csv(HOLDINGS / "filer_status.csv")
     validation = read_csv(OUT / "validation.csv")
+    dispositions = read_csv(WARNING_DISPOSITIONS_PATH)
     flags = read_csv(OUT / "flags.csv")
     exceptions = read_csv(EXCEPTIONS_PATH)
+    disposition_stats = check_warning_dispositions(validation, dispositions)
 
     filings = collect_filings(verification, merge_decisions, filer_status,
                               exceptions, cik_to_span)
@@ -542,6 +578,11 @@ def build_package(qkey: str) -> Path:
               list(validation[0]) if validation else
               ["level", "check", "quarter", "manager", "filer_cik",
                "accession", "cusip", "detail"])
+    write_csv(pkg_dir / "warning_dispositions.csv", dispositions,
+              list(dispositions[0]) if dispositions else
+              ["check", "quarter", "manager", "cusip",
+               "warning_fingerprint", "classification", "resolution",
+               "reference", "reviewed_by", "reviewed_date"])
     write_csv(pkg_dir / "flags.csv", flags,
               list(flags[0]) if flags else
               ["filer_cik", "quarter", "accession", "problem"])
@@ -559,12 +600,13 @@ def build_package(qkey: str) -> Path:
         "uncommitted_changes_at_generation": git["dirty_files"],
         "pipeline_run": run,
         "n_filings": len(filings),
+        "warning_dispositions": disposition_stats,
         "n_checksummed_files": len(checksums),
         "package_files": sorted(p.name for p in pkg_dir.iterdir()) + ["report.md"],
     }, indent=2) + "\n", encoding="utf-8")
     (pkg_dir / "report.md").write_text(
         render_report(qkey, run, filings, merge_decisions, filer_status,
-                      validation, exceptions, tests, git, checksums,
+                      validation, dispositions, exceptions, tests, git, checksums,
                       generated_utc),
         encoding="utf-8")
     return pkg_dir

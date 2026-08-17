@@ -299,6 +299,28 @@ def load_sector_map() -> dict[str, str]:
         return {r["cusip"]: r["sector"] for r in csv.DictReader(fh)}
 
 
+def load_data_quality_notes(
+        path: Path = REF / "known_exceptions.csv"
+        ) -> dict[tuple[str, str], list[dict]]:
+    """Row-level filer anomalies suitable for prominent dashboard disclosure."""
+    notes: dict[tuple[str, str], list[dict]] = defaultdict(list)
+    if not path.exists():
+        return notes
+    with open(path, newline="", encoding="utf-8") as fh:
+        for row in csv.DictReader(fh):
+            category = row.get("category", "")
+            if not (category.startswith("filer-") or
+                    category.startswith("cusip-")):
+                continue
+            notes[(row["manager"], row["quarter"])].append({
+                "category": category,
+                "summary": row.get("summary", ""),
+                "resolution": row.get("resolution", ""),
+                "reference": row.get("reference", ""),
+            })
+    return notes
+
+
 def prev_quarter_file(mgr_dir: Path, qkey: str) -> str | None:
     quarters = sorted(p.stem for p in mgr_dir.glob("*.csv"))
     older = [q for q in quarters if q < qkey]
@@ -313,6 +335,7 @@ def build_payload(quarter: str | None = None) -> dict:
     aum_by_manager = load_aum_by_manager()
     sector_of = load_sector_map()
     flags = load_pipeline_flags()
+    quality_notes = load_data_quality_notes()
 
     latest = {}
     for m in managers:
@@ -350,6 +373,11 @@ def build_payload(quarter: str | None = None) -> dict:
         options = load_options_rows(cur_path)
         mgr_spans = [s for s in spans if s.manager == m]
         aum_row = aum_by_manager.get(m, {})
+        relevant_quarters = {qkey, prev_q}
+        manager_quality_notes = [
+            note for note_q in relevant_quarters if note_q
+            for note in quality_notes.get((m, note_q), [])
+        ]
 
         changes_by_manager[m] = chg
         payload["managers"].append({
@@ -368,6 +396,7 @@ def build_payload(quarter: str | None = None) -> dict:
                 "retrieved": aum_row.get("retrieved", ""),
                 "note": aum_row.get("note", ""),
             },
+            "data_quality_notes": manager_quality_notes,
             "top_positions": top_positions(cur_book, 15),
             "changes": chg,
             "sector_mix": mix,
@@ -416,15 +445,23 @@ def run_status_summary(run: dict | None) -> dict:
                 "completed_utc": None, "errors": None, "warnings": None}
     errors = int(run.get("validation_errors") or 0)
     warnings = int(run.get("validation_warnings") or 0)
+    dispositioned = int(run.get("validation_warnings_dispositioned") or 0)
+    unresolved = len(run.get("unresolved_validation_warnings") or [])
+    invalid_dispositions = int(run.get("invalid_warning_dispositions") or 0)
     blocked = run.get("blocked") or []
     if run.get("ok"):
         return {"state": "passed",
                 "label": (f"checks passed · {errors} validation errors · "
-                          f"{warnings} warnings (reviewed)"),
+                          f"{warnings} warnings · "
+                          f"{dispositioned} dispositioned"),
                 "completed_utc": run.get("completed_utc"),
-                "errors": errors, "warnings": warnings}
+                "errors": errors, "warnings": warnings,
+                "dispositioned": dispositioned}
     parts = ([f"{len(blocked)} manager-quarter(s) blocked"] if blocked else []) \
-        + ([f"{errors} validation errors"] if errors else [])
+        + ([f"{errors} validation errors"] if errors else []) \
+        + ([f"{unresolved} unresolved warnings"] if unresolved else []) \
+        + ([f"{invalid_dispositions} invalid warning dispositions"]
+           if invalid_dispositions else [])
     return {"state": "failed",
             "label": "checks FAILED — " + (", ".join(parts)
                                            or "see data/out/run_status.json"),

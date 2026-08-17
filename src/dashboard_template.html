@@ -209,6 +209,14 @@ a.card:hover { text-decoration: none; border-color: var(--baseline); box-shadow:
 .mhead .filers { color: var(--muted); font-size: 12.5px; line-height: 1.6; }
 .mhead .qtag { color: var(--ink-2); font-size: 13px; margin-top: 2px; }
 .mhead .qnote { color: var(--muted); font-size: 12px; margin-top: 6px; max-width: 70ch; }
+.data-alert {
+  margin-top: 14px; max-width: 76ch; padding: 11px 13px;
+  border: 1px solid color-mix(in srgb, var(--down) 45%, var(--hairline));
+  border-left: 3px solid var(--down); border-radius: 4px;
+  background: color-mix(in srgb, var(--down) 7%, var(--surface));
+  color: var(--ink-2); font-size: 12.5px; line-height: 1.5;
+}
+.data-alert b { color: var(--ink); }
 
 .takeaways {
   font-family: "Newsreader", Georgia, serif;
@@ -586,6 +594,12 @@ function renderManager(slug) {
       "A " + qlabel(m.later_filing) + " filing is already on record for this manager; " +
       "the dashboard is pinned to " + DATA.as_of_label + " for cross-manager comparability."));
   }
+  (m.data_quality_notes || []).forEach(note => {
+    const alert = el("div", "data-alert");
+    alert.append(el("b", null, "Filed-data caveat. "));
+    alert.append(document.createTextNode(note.summary + " " + note.resolution));
+    head.append(alert);
+  });
 
   const take = el("section");
   take.append(el("div", "eyebrow", "Takeaways"));
@@ -741,7 +755,8 @@ function renderChanges(m) {
   p.append(el("h2", null, "Significant changes"));
   p.append(el("div", "hnote", m.prev_quarter
     ? "vs " + qlabel(m.prev_quarter) + " · share-count based · new buys and exits always; " +
-      "adds/trims at ≥25% share change on a ≥0.5% position, or ≥1pp of weight"
+      "adds/trims at ≥25% share change on a ≥0.5% position, or ≥1pp of weight · " +
+      "prior shares adjusted for documented splits and identifier aliases"
     : "no prior quarter on record"));
   if (!m.changes.length) {
     p.append(el("p", "consensus-empty", "No significant changes."));
@@ -771,6 +786,11 @@ function renderChanges(m) {
     tdS.append(document.createTextNode(fmtInt(+c.shares_prev)));
     tdS.append(el("span", "arrow", " → "));
     tdS.append(document.createTextNode(fmtInt(+c.shares_cur)));
+    if (+c.share_multiplier > 1) {
+      tdS.title = "Previous filing reported " + fmtInt(+c.shares_prev_reported) +
+        " shares; adjusted ×" + c.share_multiplier +
+        " for the split before comparison.";
+    }
     tr.append(tdS);
     const pct = c.pct_change_shares === "" ? null : parseFloat(c.pct_change_shares);
     const tdD = el("td", "r");

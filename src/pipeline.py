@@ -203,7 +203,19 @@ def main() -> None:
           + ", ".join(f"{k}={v}" for k, v in sorted(counts.items())))
     n_errors = sum(1 for f in findings if f.level == "ERROR")
     n_warns = sum(1 for f in findings if f.level == "WARN")
-    print(f"Validation ({validation_path}): {n_errors} errors, {n_warns} warnings")
+    disposition_coverage = validate.warning_disposition_coverage(
+        findings, validate.load_warning_dispositions())
+    unresolved_warnings = disposition_coverage["missing"]
+    disposition_errors = (
+        len(disposition_coverage["orphan_fingerprints"])
+        + len(disposition_coverage["duplicate_fingerprints"])
+        + disposition_coverage["incomplete_rows"]
+    )
+    n_dispositioned = n_warns - len(unresolved_warnings)
+    print(f"Validation ({validation_path}): {n_errors} errors, {n_warns} warnings, "
+          f"{n_dispositioned} dispositioned, "
+          f"{len(unresolved_warnings)} unresolved, "
+          f"{disposition_errors} invalid disposition row(s)")
     if withheld_not_due:
         print("Withheld (sibling filer not yet due): "
               + ", ".join(withheld_not_due))
@@ -214,7 +226,8 @@ def main() -> None:
         for line in same_day:
             print(f"!!   {line}", file=sys.stderr)
 
-    ok = not blocked and n_errors == 0
+    ok = (not blocked and n_errors == 0 and not unresolved_warnings
+          and not disposition_errors)
     OUT.mkdir(parents=True, exist_ok=True)
     RUN_STATUS_PATH.write_text(json.dumps({
         "ok": ok,
@@ -225,12 +238,21 @@ def main() -> None:
         "blocked": sorted(set(blocked)),
         "validation_errors": n_errors,
         "validation_warnings": n_warns,
+        "validation_warnings_dispositioned": n_dispositioned,
+        "unresolved_validation_warnings": [
+            {"check": f.check, "quarter": f.quarter,
+             "manager": f.manager, "cusip": f.cusip}
+            for f in unresolved_warnings
+        ],
+        "invalid_warning_dispositions": disposition_errors,
         "same_day_filings": same_day,
     }, indent=2) + "\n", encoding="utf-8")
     if not ok:
         print(f"\nFAILED: {len(set(blocked))} manager-quarter(s) blocked "
               f"(LATE/ERROR status or validation), {n_errors} validation "
-              f"error(s): {', '.join(sorted(set(blocked))) or '-'}",
+              f"error(s), {len(unresolved_warnings)} unresolved warning(s), "
+              f"{disposition_errors} invalid warning disposition row(s): "
+              f"{', '.join(sorted(set(blocked))) or '-'}",
               file=sys.stderr)
         sys.exit(1)
 

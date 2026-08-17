@@ -16,6 +16,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 
 import evidence  # noqa: E402
+import validate  # noqa: E402
 from common import FilerSpan  # noqa: E402
 
 
@@ -114,6 +115,43 @@ class TestEffectiveRoles(unittest.TestCase):
         dup = make_decision(role="DUPLICATE_BOOK")
         roles = evidence.effective_roles([merged, dup])
         self.assertEqual(roles[merged["accession"]]["role"], "DUPLICATE_BOOK")
+
+
+class TestWarningDispositionCoverage(unittest.TestCase):
+    def test_every_warning_requires_a_complete_matching_disposition(self):
+        warning = {"level": "WARN", "check": "qoq-price",
+                   "quarter": "2026Q2", "manager": "Giverny",
+                   "filer_cik": "1", "accession": "a", "cusip": "78463V107",
+                   "detail": "reported value anomaly"}
+        disposition = dict(
+            warning,
+            warning_fingerprint=validate.warning_fingerprint(warning),
+            classification="filer-value-error",
+                           resolution="Preserve as filed", reference="SEC",
+                           reviewed_by="Analyst", reviewed_date="2026-08-17")
+        self.assertEqual(
+            evidence.check_warning_dispositions([warning], [disposition]),
+            {"warnings": 1, "dispositioned": 1, "unresolved": 0})
+
+    def test_unmatched_warning_hard_fails(self):
+        warning = {"level": "WARN", "check": "identity", "quarter": "",
+                   "manager": "", "cusip": "123456789"}
+        with self.assertRaises(SystemExit):
+            evidence.check_warning_dispositions([warning], [])
+
+    def test_stale_orphan_disposition_hard_fails(self):
+        warning = {"level": "WARN", "check": "identity", "quarter": "",
+                   "manager": "", "filer_cik": "", "accession": "",
+                   "cusip": "123456789", "detail": "current detail"}
+        stale = dict(
+            warning,
+            warning_fingerprint=validate.warning_fingerprint(
+                dict(warning, detail="old detail")),
+            classification="issuer-change", resolution="reviewed",
+            reference="SEC", reviewed_by="Analyst",
+            reviewed_date="2026-08-17")
+        with self.assertRaises(SystemExit):
+            evidence.check_warning_dispositions([warning], [stale])
 
 
 class TestStatusCoverage(RetrievalStub):
