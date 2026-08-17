@@ -5,14 +5,17 @@ cusip,ticker,cik,sic,sic_desc,sector,method,retrieved
 00091G104,ACVA,1637873,7389,"Services-Business Services, NEC",Industrials,sec_sic,2026-08-12
 000957100,ABM,771497,7340,Services-To Dwellings & Other Buildings,Industrials,sec_sic,2026-08-12
 001084102,AGCO,880266,3523,Farm Machinery & Equipment,Industrials,sec_sic,2026-08-12
+00108J109,ACMR,1680062,3559,"Special Industry Machinery, NEC",Industrials,sec_sic,2026-08-17
 00130H105,AES,874761,4991,Cogeneration Services & Small Power Producers,Utilities,sec_sic,2026-08-12
 00138L108,RERE,1838957,5990,"Retail-Retail Stores, NEC",Consumer Discretionary,sec_sic,2026-08-12
 00165C302,AMC,1411579,7830,Services-Motion Picture Theaters,Communication Services,sec_sic,2026-08-12
 00182C103,ANIP,1023024,2834,Pharmaceutical Preparations,Health Care,sec_sic_usfigi,2026-08-12
 00187Y100,APG,1796209,7340,Services-To Dwellings & Other Buildings,Industrials,sec_sic,2026-08-12
 00206R102,T,732717,4813,Telephone Communications (No Radiotelephone),Communication Services,sec_sic,2026-08-12
+00215W100,ASX,1122411,3674,Semiconductors & Related Devices,Information Technology,sec_sic,2026-08-17
 002824100,ABT,1800,2834,Pharmaceutical Preparations,Health Care,sec_sic,2026-08-12
 002896207,ANF,1018840,5651,Retail-Family Clothing Stores,Consumer Discretionary,sec_sic,2026-08-12
+00370M103,ABVX,1956827,2834,Pharmaceutical Preparations,Health Care,sec_sic,2026-08-17
 00402L107,ASO,1817358,5940,Retail-Miscellaneous Shopping Goods Stores,Consumer Discretionary,sec_sic,2026-08-12
 00404A109,ACHC,1520697,8093,"Services-Specialty Outpatient Facilities, NEC",Health Care,sec_sic,2026-08-12
 005098108,GOLF,1672013,3949,"Sporting & Athletic Goods, NEC",Consumer Discretionary,sec_sic,2026-08-12
@@ -24,6 +27,7 @@ cusip,ticker,cik,sic,sic_desc,sector,method,retrieved
 00751Y106,AAP,1158449,5531,Retail-Auto & Home Supply Stores,Consumer Discretionary,sec_sic_usfigi,2026-08-12
 00766T100,ACM,868857,8711,Services-Engineering Services,Industrials,sec_sic,2026-08-12
 007903107,AMD,2488,3674,Semiconductors & Related Devices,Information Technology,sec_sic,2026-08-12
+007973100,AEIS,927003,3679,"Electronic Components, NEC",Information Technology,sec_sic,2026-08-17
 008073108,AVAV,1368622,3721,Aircraft,Industrials,sec_sic_usfigi,2026-08-12
 00827B106,AFRM,1820953,6141,Personal Credit Institutions,Financials,sec_sic,2026-08-12
 00851L103,API,1802883,7372,Services-Prepackaged Software,Information Technology,sec_sic,2026-08-12
@@ -42,6 +46,9 @@ cusip,ticker,cik,sic,sic_desc,sector,method,retrieved
 02005N100,ALLY,40729,6022,State Commercial Banks,Financials,sec_sic,2026-08-12
 02079K107,GOOG,1652044,7370,"Services-Computer Programming, Data Processing, Etc.",Information Technology,sec_sic,2026-08-12
 02079K305,GOOGL,1652044,7370,"Services-Computer Programming, Data Processing, Etc.",Information Technology,sec_sic,2026-08-12
+02079K404,GOOGL 6.25 05/15/29 A,,,,Unclassified,no_us_listing,2026-08-17
+02079K602,GOOGL 6.25 05/15/29 B,,,,Unclassified,no_us_listing,2026-08-17
+02155H200,ALT,1326190,2834,Pharmaceutical Preparations,Health Care,sec_sic,2026-08-17
 02156V109,OKLO,1849056,4911,Electric Services,Utilities,sec_sic,2026-08-12
 02209S103,MO,764180,2111,Cigarettes,Consumer Staples,sec_sic,2026-08-12
 023135106,AMZN,1018724,5961,Retail-Catalog & Mail-Order Houses,Consumer Discretionary,sec_sic,2026-08-12
@@ -50,7 +57,7 @@ cusip,ticker,cik,sic,sic_desc,sector,method,retrieved
 02376R102,AAL,6201,4512,"Air Transportation, Scheduled",Industrials,sec_sic,2026-08-12
 023939101,AMTM,2011286,7389,"Services-Business Services, NEC",Industrials,sec_sic,2026-08-12
 024061103,DCH,1062231,3714,Motor Vehicle Parts & Accessories,Consumer Discretionary,sec_sic,2026-08-12
-025537101,AEP,4904,4911,Electric Services,Utilities,manual_cik,2026-08-12
+025537101,AEP,4904,4911,Electric Services,Utilities,manual_cik,2026-08-17
 02553E106,AEO,919012,5651,Retail-Family Clothing Stores,Consumer Discretionary,sec_sic,2026-08-12
 025816109,AXP,4962,6199,Finance Services,Financials,sec_sic,2026-08-12
 026874784,AIG,5272,6331,"Fire, Marine & Casualty Insurance",Financials,sec_sic,2026-08-12
@@ -85,6 +92,8 @@ cusip,ticker,cik,sic,sic_desc,sector,method,retrieved
 040413205,ANET,1596532,3576,Computer Communications Equipment,Information Technology,sec_sic,2026-08-12
 042068205,ARM,1973239,3674,Semiconductors & Related Devices,Information Technology,sec_sic,2026-08-12
 04272N102,AVBP,1868279,2834,Pharmaceutical Preparations,Health Care,sec_sic,2026-08-12
+042735100,ARW,7536,5065,"Wholesale-Electronic Parts & Equipment, NEC",Consumer Discretionary,sec_sic,2026-08-17
+04317A107,ARTV,1817241,2836,"Biological Products, (No Diagnostic Substances)",Health Care,sec_sic,2026-08-17
 044186104,ASH,1674862,5160,Wholesale-Chemicals & Allied Products,Consumer Discretionary,sec_sic,2026-08-12
 046224101,ASTE,792987,3531,Construction Machinery & Equip,Industrials,sec_sic,2026-08-12
 04626A103,ALAB,1736297,3674,Semiconductors & Related Devices,Information Technology,sec_sic,2026-08-12
@@ -98,11 +107,16 @@ cusip,ticker,cik,sic,sic_desc,sector,method,retrieved
 053015103,ADP,8670,7374,Services-Computer Processing & Data Preparation,Information Technology,sec_sic,2026-08-12
 05329W102,AN,350698,5500,Retail-Auto Dealers & Gasoline Stations,Consumer Discretionary,sec_sic,2026-08-12
 053332102,AZO,866787,5531,Retail-Auto & Home Supply Stores,Consumer Discretionary,sec_sic,2026-08-12
+053484101,AVB,915912,6798,Real Estate Investment Trusts,Real Estate,sec_sic_usfigi,2026-08-17
 05352A100,AVTR,1722482,3826,Laboratory Analytical Instruments,Health Care,sec_sic,2026-08-12
 05368V106,AVNT,1122976,2821,"Plastic Materials, Synth Resins & Nonvulcan Elastomers",Materials,sec_sic,2026-08-12
 05368X102,AVDX,,,,Unclassified,no_us_listing,2026-08-12
+053807103,AVT,8858,5065,"Wholesale-Electronic Parts & Equipment, NEC",Consumer Discretionary,sec_sic,2026-08-17
+054540208,ACLS,1113232,3559,"Special Industry Machinery, NEC",Industrials,sec_sic,2026-08-17
 05464C101,AXON,1069183,3480,"Ordnance & Accessories, (No Vehicles/Guided Missiles)",Materials,sec_sic,2026-08-12
 05465C100,AX,1299709,6035,"Savings Institution, Federally Chartered",Financials,sec_sic_usfigi,2026-08-12
+05501U601,AZUL,1432364,4512,"Air Transportation, Scheduled",Industrials,sec_sic,2026-08-17
+05534B760,BCE,718940,4813,Telephone Communications (No Radiotelephone),Communication Services,sec_sic,2026-08-17
 05550J101,BJ,1531152,5331,Retail-Variety Stores,Consumer Discretionary,sec_sic,2026-08-12
 05603J108,BKV,1838406,1311,Crude Petroleum & Natural Gas,Energy,sec_sic,2026-08-12
 05614L209,BW,1630805,3433,"Heating Equipment, Except Electric & Warm Air Furnaces",Materials,sec_sic,2026-08-12
@@ -119,6 +133,7 @@ cusip,ticker,cik,sic,sic_desc,sector,method,retrieved
 070830104,BBWI,701985,5990,"Retail-Retail Stores, NEC",Consumer Discretionary,sec_sic,2026-08-12
 071705107,BLCO,1860742,3851,Ophthalmic Goods,Health Care,sec_sic,2026-08-12
 071734107,BHC,885590,2834,Pharmaceutical Preparations,Health Care,sec_sic,2026-08-12
+07782B104,BLTE,1889109,2834,Pharmaceutical Preparations,Health Care,sec_sic,2026-08-17
 07831C103,BRBR,1772016,2000,Food and Kindred Products,Consumer Staples,sec_sic,2026-08-12
 08160H101,BHE,863436,3672,Printed Circuit Boards,Information Technology,sec_sic,2026-08-12
 084423102,WRB,11544,6331,"Fire, Marine & Casualty Insurance",Financials,sec_sic,2026-08-12
@@ -145,12 +160,14 @@ cusip,ticker,cik,sic,sic_desc,sector,method,retrieved
 097023105,BA,12927,3721,Aircraft,Industrials,sec_sic,2026-08-12
 09857L108,BKNG,1075531,4700,Transportation Services,Industrials,sec_sic,2026-08-12
 099406100,BOOT,1610250,5661,Retail-Shoe Stores,Consumer Discretionary,sec_sic,2026-08-12
+099502106,BAH,1443646,8742,Services-Management Consulting Services,Industrials,sec_sic,2026-08-17
 100557107,SAM,949870,2082,Malt Beverages,Consumer Staples,sec_sic,2026-08-12
 101137107,BSX,885725,3841,Surgical & Medical Instruments & Apparatus,Health Care,sec_sic,2026-08-12
 10806X102,BBIO,1743881,2834,Pharmaceutical Preparations,Health Care,sec_sic,2026-08-12
 109194100,BFAM,1437578,8351,Services-Child Day Care Services,Industrials,sec_sic,2026-08-12
 10922N103,BHF,1685040,6311,Life Insurance,Financials,sec_sic,2026-08-12
 10948W103,AAMI,1748824,6282,Investment Advice,Financials,sec_sic,2026-08-12
+10950A106,BTSG,1865782,8082,Services-Home Health Care Services,Health Care,sec_sic,2026-08-17
 109641100,EAT,703351,5812,Retail-Eating  Places,Consumer Discretionary,sec_sic,2026-08-12
 110448107,BTI,1303523,2111,Cigarettes,Consumer Staples,sec_sic_usfigi,2026-08-12
 11135F101,AVGO,1730168,3674,Semiconductors & Related Devices,Information Technology,sec_sic,2026-08-12
@@ -159,6 +176,7 @@ cusip,ticker,cik,sic,sic_desc,sector,method,retrieved
 115236101,BRO,79282,6411,"Insurance Agents, Brokers & Service",Financials,sec_sic,2026-08-12
 115637100,BF/A,14693,2080,Beverages,Consumer Staples,sec_sic,2026-08-12
 115637209,BF/B,14693,2080,Beverages,Consumer Staples,sec_sic,2026-08-12
+116794108,BRKR,1109354,3826,Laboratory Analytical Instruments,Health Care,sec_sic,2026-08-17
 117043109,BC,14930,3510,Engines & Turbines,Industrials,sec_sic,2026-08-12
 118440106,BKE,885245,5651,Retail-Family Clothing Stores,Consumer Discretionary,sec_sic,2026-08-12
 120076104,BBW,1113809,5945,"Retail-Hobby, Toy & Game Shops",Consumer Discretionary,sec_sic,2026-08-12
@@ -193,7 +211,7 @@ cusip,ticker,cik,sic,sic_desc,sector,method,retrieved
 142038108,CRBU,1619856,2836,"Biological Products, (No Diagnostic Substances)",Health Care,sec_sic,2026-08-12
 142152107,CAI,2019410,8071,Services-Medical Laboratories,Health Care,sec_sic,2026-08-12
 143130102,KMX,1170010,5500,Retail-Auto Dealers & Gasoline Stations,Consumer Discretionary,sec_sic,2026-08-12
-143658300,CCL,815097,4400,Water Transportation,Industrials,manual_cik,2026-08-12
+143658300,CCL,815097,4400,Water Transportation,Industrials,manual_cik,2026-08-17
 144285103,CRS,17843,3312,"Steel Works, Blast Furnaces & Rolling Mills (Coke Ovens)",Materials,sec_sic,2026-08-12
 146229109,CRI,1060822,2300,Apparel & Other Finishd Prods of  Fabrics & Similar Matl,Consumer Discretionary,sec_sic,2026-08-12
 146869102,CVNA,1690820,5500,Retail-Auto Dealers & Gasoline Stations,Consumer Discretionary,sec_sic,2026-08-12
@@ -206,6 +224,7 @@ cusip,ticker,cik,sic,sic_desc,sector,method,retrieved
 15135U109,CVE,1475260,1311,Crude Petroleum & Natural Gas,Energy,sec_sic,2026-08-12
 152309100,CNTA,,,,Unclassified,no_us_listing,2026-08-12
 155923105,CTRI,1981599,4923,Natural Gas Transmisison & Distribution,Utilities,sec_sic,2026-08-12
+15675D103,CBRS,2021728,3674,Semiconductors & Related Devices,Information Technology,sec_sic,2026-08-17
 15743P104,CHA,2013649,5810,Retail-Eating & Drinking Places,Consumer Discretionary,sec_sic,2026-08-12
 15961R105,,,,,Unclassified,no_us_listing,2026-08-12
 15961R303,CHPT,1777393,3690,"Miscellaneous Electrical Machinery, Equipment & Supplies",Information Technology,sec_sic,2026-08-12
@@ -253,6 +272,7 @@ cusip,ticker,cik,sic,sic_desc,sector,method,retrieved
 20337X109,VISN,1517228,3663,Radio & Tv Broadcasting & Communications Equipment,Information Technology,sec_sic,2026-08-12
 203668108,CYH,1108109,8062,"Services-General Medical & Surgical Hospitals, NEC",Health Care,sec_sic,2026-08-12
 204166102,CVLT,1169561,7372,Services-Prepackaged Software,Information Technology,sec_sic,2026-08-12
+20459V105,GPGI,1823144,6199,Finance Services,Financials,sec_sic,2026-08-17
 20464U100,COMP,1563190,6531,Real Estate Agents & Managers (For Others),Real Estate,sec_sic,2026-08-12
 205887102,CAG,23217,2000,Food and Kindred Products,Consumer Staples,sec_sic,2026-08-12
 20603L102,CON,2014596,8093,"Services-Specialty Outpatient Facilities, NEC",Health Care,sec_sic,2026-08-12
@@ -263,6 +283,7 @@ cusip,ticker,cik,sic,sic_desc,sector,method,retrieved
 216648501,COO,711404,3851,Ophthalmic Goods,Health Care,sec_sic,2026-08-12
 217204106,CPRT,900075,5500,Retail-Auto Dealers & Gasoline Stations,Consumer Discretionary,sec_sic,2026-08-12
 21871N101,CXW,1070985,6798,Real Estate Investment Trusts,Real Estate,sec_sic,2026-08-12
+21871X109,CRBG,1889539,6311,Life Insurance,Financials,sec_sic,2026-08-17
 21873S108,CRWV,1769628,7372,Services-Prepackaged Software,Information Technology,sec_sic,2026-08-12
 21874A106,CORZ,1839341,6199,Finance Services,Financials,sec_sic,2026-08-12
 218937100,CNR,1710366,1220,Silver Ores,Materials,sec_sic,2026-08-12
@@ -308,6 +329,7 @@ cusip,ticker,cik,sic,sic_desc,sector,method,retrieved
 253868103,DLR,1297996,6798,Real Estate Investment Trusts,Real Estate,sec_sic_usfigi,2026-08-12
 254423106,DIN,49754,5812,Retail-Eating  Places,Consumer Discretionary,sec_sic_usfigi,2026-08-12
 25445D101,DDL,1854545,5961,Retail-Catalog & Mail-Order Houses,Consumer Discretionary,sec_sic,2026-08-12
+254543101,DIOD,29002,3674,Semiconductors & Related Devices,Information Technology,sec_sic,2026-08-17
 254687106,DIS,1744489,7990,Services-Miscellaneous Amusement & Recreation,Communication Services,sec_sic,2026-08-12
 254709108,DFSEUR,,,,Unclassified,no_us_listing,2026-08-12
 256163106,DOCU,1261333,7372,Services-Prepackaged Software,Information Technology,sec_sic,2026-08-12
@@ -352,6 +374,7 @@ cusip,ticker,cik,sic,sic_desc,sector,method,retrieved
 29452E101,EQH,1333986,6411,"Insurance Agents, Brokers & Service",Financials,sec_sic,2026-08-12
 29530P102,ERIE,922621,6411,"Insurance Agents, Brokers & Service",Financials,sec_sic,2026-08-12
 296006109,ERO,1853860,1000,Metal Mining,Materials,sec_sic,2026-08-12
+296013105,EROC,2110029,3620,Electrical Industrial Apparatus,Industrials,sec_sic,2026-08-17
 297602104,ETD,896156,2511,"Wood Household Furniture, (No Upholstered)",Materials,sec_sic,2026-08-12
 29786A106,ETSY,1370637,7389,"Services-Business Services, NEC",Industrials,sec_sic,2026-08-12
 29788T103,ETWOGBP,,,,Unclassified,no_us_listing,2026-08-12
@@ -368,7 +391,9 @@ cusip,ticker,cik,sic,sic_desc,sector,method,retrieved
 30303M102,META,1326801,7370,"Services-Computer Programming, Data Processing, Etc.",Information Technology,sec_sic,2026-08-12
 303250104,FICO,814547,7389,"Services-Business Services, NEC",Industrials,sec_sic,2026-08-12
 31428X106,FDX,1048911,4513,Air Courier Services,Industrials,sec_sic,2026-08-12
+314352105,FDXF,2082247,4513,Air Courier Services,Industrials,sec_sic,2026-08-17
 31488V107,FERG,2011641,5070,Wholesale-Hardware & Plumbing & Heating Equipment & Supplies,Consumer Discretionary,sec_sic,2026-08-12
+31556C106,FRVO,1853868,4911,Electric Services,Utilities,sec_sic,2026-08-17
 315616102,FFIV,1048695,3576,Computer Communications Equipment,Information Technology,sec_sic,2026-08-12
 316773100,FITB,35527,6022,State Commercial Banks,Financials,sec_sic,2026-08-12
 316841105,FIG,1579878,7372,Services-Prepackaged Software,Information Technology,sec_sic,2026-08-12
@@ -391,6 +416,7 @@ cusip,ticker,cik,sic,sic_desc,sector,method,retrieved
 344849104,WOO,,,,Unclassified,no_us_listing,2026-08-12
 345370860,F,37996,3711,Motor Vehicles & Passenger Car Bodies,Consumer Discretionary,sec_sic,2026-08-12
 34631F102,FPS,2080126,3620,Electrical Industrial Apparatus,Industrials,sec_sic,2026-08-12
+346375108,FORM,1039399,3674,Semiconductors & Related Devices,Information Technology,sec_sic_usfigi,2026-08-17
 349381103,FIGR,2064124,6163,Loan Brokers,Financials,sec_sic,2026-08-12
 34959E109,FTNT,1262039,3577,"Computer Peripheral Equipment, NEC",Information Technology,sec_sic,2026-08-12
 34959J108,FTV,1659166,3823,"Industrial Instruments For Measurement, Display, and Control",Health Care,sec_sic,2026-08-12
@@ -449,6 +475,7 @@ cusip,ticker,cik,sic,sic_desc,sector,method,retrieved
 418056107,HAS,46080,3944,"Games, Toys & Children's Vehicles (No Dolls & Bicycles)",Consumer Discretionary,sec_sic,2026-08-12
 418100103,HCP2EUR,,,,Unclassified,no_us_listing,2026-08-12
 419870100,HE,354707,4911,Electric Services,Utilities,sec_sic,2026-08-12
+420261109,HWKN,46250,5160,Wholesale-Chemicals & Allied Products,Consumer Discretionary,sec_sic,2026-08-17
 42226A107,HQY,1428336,7389,"Services-Business Services, NEC",Industrials,sec_sic,2026-08-12
 422806208,HEI/A,46619,3724,Aircraft Engines & Engine Parts,Industrials,sec_sic,2026-08-12
 42330P107,HLX,866829,1389,"Oil & Gas Field Services, NEC",Energy,sec_sic_usfigi,2026-08-12
@@ -493,6 +520,7 @@ cusip,ticker,cik,sic,sic_desc,sector,method,retrieved
 458334109,IPAR,822663,2844,"Perfumes, Cosmetics & Other Toilet Preparations",Materials,sec_sic,2026-08-12
 45841N107,IBKR,1381197,6211,"Security Brokers, Dealers & Flotation Companies",Financials,sec_sic,2026-08-12
 45866F104,ICE,1571949,6200,"Security & Commodity Brokers, Dealers, Exchanges & Services",Financials,sec_sic,2026-08-12
+45867G101,IDCC,1405495,6794,Patent Owners & Lessors,Financials,sec_sic_usfigi,2026-08-17
 459506101,IFF,51253,2860,Industrial Organic Chemicals,Materials,sec_sic,2026-08-12
 460146103,IP,51434,2621,Paper Mills,Materials,sec_sic,2026-08-12
 46090E103,NDQ,,,,Funds & ETFs,figi_type,2026-08-12
@@ -517,6 +545,7 @@ cusip,ticker,cik,sic,sic_desc,sector,method,retrieved
 46438F101,IBIT,,,,Funds & ETFs,figi_type,2026-08-12
 465562106,ITUB,1132597,6022,State Commercial Banks,Financials,sec_sic_usfigi,2026-08-12
 46591M109,JOYY,1530238,7374,Services-Computer Processing & Data Preparation,Information Technology,sec_sic,2026-08-12
+466032109,JJSF,785956,2052,Cookies & Crackers,Consumer Staples,sec_sic,2026-08-17
 46625H100,JPM,19617,6021,National Commercial Banks,Financials,sec_sic,2026-08-12
 466313103,JBL,898293,3672,Printed Circuit Boards,Information Technology,sec_sic,2026-08-12
 46982L108,J,52988,1600,Heavy Construction Other Than Bldg Const - Contractors,Industrials,sec_sic,2026-08-12
@@ -535,6 +564,8 @@ cusip,ticker,cik,sic,sic_desc,sector,method,retrieved
 48553T106,BZ,1842827,7370,"Services-Computer Programming, Data Processing, Etc.",Information Technology,sec_sic,2026-08-12
 485859110,,,,,Unclassified,no_us_listing,2026-08-12
 48666K109,KBH,795266,1531,Operative Builders,Industrials,sec_sic,2026-08-12
+48669G303,KZIA,1075880,2834,Pharmaceutical Preparations,Health Care,sec_sic,2026-08-17
+486917107,KEEL,1812477,6199,Finance Services,Financials,sec_sic,2026-08-17
 487836108,KEL,,,,Unclassified,no_us_listing,2026-08-12
 49177J102,KVUE,1944048,2844,"Perfumes, Cosmetics & Other Toilet Preparations",Materials,sec_sic,2026-08-12
 49271V100,KDP,1418135,2080,Beverages,Consumer Staples,sec_sic,2026-08-12
@@ -546,10 +577,12 @@ cusip,ticker,cik,sic,sic_desc,sector,method,retrieved
 49714P108,KNSL,1669162,6331,"Fire, Marine & Casualty Insurance",Financials,sec_sic,2026-08-12
 49845K101,KVYO,1835830,7372,Services-Prepackaged Software,Information Technology,sec_sic,2026-08-12
 499049104,KNX,1492691,4213,Trucking (No Local),Industrials,sec_sic,2026-08-12
+50012A108,KGS,1767042,4922,Natural Gas Transmission,Utilities,sec_sic,2026-08-17
 50050N103,KTB,1760965,2320,"Men's & Boys' Furnishgs, Work Clothg, & Allied Garments",Consumer Discretionary,sec_sic,2026-08-12
 500754106,KHC,1637459,2030,"Canned, Frozen & Preservd Fruit, Veg & Food Specialties",Consumer Staples,sec_sic,2026-08-12
 500767306,KWEB,,,,Funds & ETFs,figi_type,2026-08-12
 501044101,KR,56873,5411,Retail-Grocery Stores,Consumer Staples,sec_sic,2026-08-12
+501242101,KLIC,56978,3674,Semiconductors & Related Devices,Information Technology,sec_sic,2026-08-17
 501270102,KRUS,1772177,5812,Retail-Eating  Places,Consumer Discretionary,sec_sic,2026-08-12
 50155Q100,KD,1867072,7373,Services-Computer Integrated Systems Design,Information Technology,sec_sic,2026-08-12
 50202M102,LI,1791706,3711,Motor Vehicles & Passenger Car Bodies,Consumer Discretionary,sec_sic,2026-08-12
@@ -588,6 +621,7 @@ cusip,ticker,cik,sic,sic_desc,sector,method,retrieved
 532457108,LLY,59478,2834,Pharmaceutical Preparations,Health Care,sec_sic,2026-08-12
 53566V106,LINE,1868159,6798,Real Estate Investment Trusts,Real Estate,sec_sic,2026-08-12
 536797103,LAD,1023128,5500,Retail-Auto Dealers & Gasoline Stations,Consumer Discretionary,sec_sic,2026-08-12
+53680QAA6,LARCN 1.75 01/15/27,,,,Unclassified,no_us_listing,2026-08-17
 537008104,LFUS,889331,3613,Switchgear & Switchboard Apparatus,Industrials,sec_sic,2026-08-12
 538034109,LYV,1335258,7900,Services-Amusement & Recreation Services,Communication Services,sec_sic,2026-08-12
 539439109,LYG,1160106,6029,"Commercial Banks, NEC",Financials,sec_sic,2026-08-12
@@ -606,8 +640,10 @@ cusip,ticker,cik,sic,sic_desc,sector,method,retrieved
 55318A108,MNTN,1891027,7310,Services-Advertising,Industrials,sec_sic,2026-08-12
 553368101,MP,1801368,1000,Metal Mining,Materials,sec_sic,2026-08-12
 55336V100,MPLX,1552000,4610,Pipe Lines (No Natural Gas),Industrials,sec_sic,2026-08-12
+553498106,MSA,66570,3842,"Orthopedic, Prosthetic & Surgical Appliances & Supplies",Health Care,sec_sic,2026-08-17
 553530106,MSM,1003078,5084,Wholesale-Industrial Machinery & Equipment,Consumer Discretionary,sec_sic,2026-08-12
 55354G100,MSCI,1408198,7389,"Services-Business Services, NEC",Industrials,sec_sic,2026-08-12
+55405Y100,MTSI,1493594,3674,Semiconductors & Related Devices,Information Technology,sec_sic,2026-08-17
 55616P104,M,794367,5311,Retail-Department Stores,Consumer Discretionary,sec_sic,2026-08-12
 556269108,SHOO,913241,3140,"Footwear, (No Rubber)",Consumer Discretionary,sec_sic,2026-08-12
 558256103,MSGE,1952073,7990,Services-Miscellaneous Amusement & Recreation,Communication Services,sec_sic,2026-08-12
@@ -618,6 +654,7 @@ cusip,ticker,cik,sic,sic_desc,sector,method,retrieved
 565394103,CART,1579091,7389,"Services-Business Services, NEC",Industrials,sec_sic,2026-08-12
 570535104,MKL,1096343,6331,"Fire, Marine & Casualty Insurance",Financials,sec_sic,2026-08-12
 571903202,MAR,1048286,7011,Hotels & Motels,Consumer Discretionary,sec_sic,2026-08-12
+573284106,MLM,916076,1400,Mining & Quarrying of  Nonmetallic Minerals (No Fuels),Materials,sec_sic,2026-08-17
 573874104,MRVL,1835632,3674,Semiconductors & Related Devices,Information Technology,sec_sic,2026-08-12
 574795100,MASI*,,,,Unclassified,no_us_listing,2026-08-12
 576323109,MTZ,15615,1623,"Water, Sewer, Pipeline, Comm & Power Line Construction",Industrials,sec_sic,2026-08-12
@@ -625,6 +662,7 @@ cusip,ticker,cik,sic,sic_desc,sector,method,retrieved
 57638P104,MBC,1941365,2511,"Wood Household Furniture, (No Upholstered)",Materials,sec_sic,2026-08-12
 57667L107,MTCH,891103,7370,"Services-Computer Programming, Data Processing, Etc.",Information Technology,sec_sic,2026-08-12
 57686G105,MATX,3453,4400,Water Transportation,Industrials,sec_sic,2026-08-12
+57776J100,MXL,1288469,3674,Semiconductors & Related Devices,Information Technology,sec_sic,2026-08-17
 579780206,MKC,63754,2090,Miscellaneous Food Preparations & Kindred Products,Consumer Staples,sec_sic_usfigi,2026-08-12
 580135101,MCD,63908,5812,Retail-Eating  Places,Consumer Discretionary,sec_sic,2026-08-12
 58155Q103,MCK,927653,5122,"Wholesale-Drugs, Proprietaries & Druggists' Sundries",Health Care,sec_sic,2026-08-12
@@ -638,6 +676,7 @@ cusip,ticker,cik,sic,sic_desc,sector,method,retrieved
 59267L107,,,,,Unclassified,no_us_listing,2026-08-12
 592688105,MTD,1037646,3826,Laboratory Analytical Instruments,Health Care,sec_sic,2026-08-12
 594918104,MSFT,789019,7372,Services-Prepackaged Software,Information Technology,sec_sic,2026-08-12
+595017104,MCHP,827054,3674,Semiconductors & Related Devices,Information Technology,sec_sic,2026-08-17
 595112103,MU,723125,3674,Semiconductors & Related Devices,Information Technology,sec_sic,2026-08-12
 59522J103,MAA,912595,6798,Real Estate Investment Trusts,Real Estate,sec_sic,2026-08-12
 596278101,MIDD,769520,3580,Refrigeration & Service Industry Machinery,Industrials,sec_sic,2026-08-12
@@ -655,6 +694,7 @@ cusip,ticker,cik,sic,sic_desc,sector,method,retrieved
 610236101,MNRO,876427,7500,"Services-Automotive Repair, Services & Parking",Industrials,sec_sic,2026-08-12
 61174X109,MNST,865752,2086,Bottled & Canned Soft Drinks & Carbonated Waters,Consumer Staples,sec_sic,2026-08-12
 615369105,MCO,1059556,7320,"Services-Consumer Credit Reporting, Collection Agencies",Industrials,sec_sic_usfigi,2026-08-12
+617446448,MS,895421,6211,"Security Brokers, Dealers & Flotation Companies",Financials,sec_sic_usfigi,2026-08-17
 61945C103,MOS,1285785,2870,Agricultural Chemicals,Materials,sec_sic,2026-08-12
 620076307,MSI,68505,3663,Radio & Tv Broadcasting & Communications Equipment,Information Technology,sec_sic,2026-08-12
 62482R107,07WA,,,,Unclassified,no_us_listing,2026-08-12
@@ -686,6 +726,7 @@ cusip,ticker,cik,sic,sic_desc,sector,method,retrieved
 653656108,NICE,1003935,7372,Services-Prepackaged Software,Information Technology,sec_sic_usfigi,2026-08-12
 654106103,NKE,320187,3021,Rubber & Plastics Footwear,Materials,sec_sic,2026-08-12
 654110303,8NI0,,,,Unclassified,no_us_listing,2026-08-12
+65487K100,LASR,1124796,3674,Semiconductors & Related Devices,Information Technology,sec_sic,2026-08-17
 654902204,NOK,924613,3663,Radio & Tv Broadcasting & Communications Equipment,Information Technology,sec_sic,2026-08-12
 65535H208,NMR,1163653,6211,"Security Brokers, Dealers & Flotation Companies",Financials,sec_sic,2026-08-12
 655664100,JWNUSD,,,,Unclassified,no_us_listing,2026-08-12
@@ -708,6 +749,7 @@ cusip,ticker,cik,sic,sic_desc,sector,method,retrieved
 679369108,,,,,Unclassified,no_us_listing,2026-08-12
 679580100,ODFL,878927,4213,Trucking (No Local),Industrials,sec_sic,2026-08-12
 681116109,OLLI,1639300,5331,Retail-Variety Stores,Consumer Discretionary,sec_sic,2026-08-12
+682189105,ON,1097864,3674,Semiconductors & Related Devices,Information Technology,sec_sic,2026-08-17
 68268W103,OMF,1584207,6141,Personal Credit Institutions,Financials,sec_sic,2026-08-12
 68278B107,K4F,,,,Unclassified,no_us_listing,2026-08-12
 683344105,ONTO,704532,3829,"Measuring & Controlling Devices, NEC",Health Care,sec_sic,2026-08-12
@@ -722,6 +764,7 @@ cusip,ticker,cik,sic,sic_desc,sector,method,retrieved
 69121K104,OBDC,1655888,,,Unclassified,sec_sic,2026-08-12
 691497309,OXM,75288,2320,"Men's & Boys' Furnishgs, Work Clothg, & Allied Garments",Consumer Discretionary,sec_sic,2026-08-12
 69291A100,PHXUSD,,,,Unclassified,no_us_listing,2026-08-12
+693282105,PDFS,1120914,7372,Services-Prepackaged Software,Information Technology,sec_sic,2026-08-17
 69331C108,PCG,1004980,4931,Electric & Other Services Combined,Utilities,sec_sic,2026-08-12
 69331C306,PCG 6 12/01/27 A,,,,Unclassified,no_us_listing,2026-08-12
 69331CAL2,PCG 4.25 12/01/27,,,,Unclassified,no_us_listing,2026-08-12
@@ -750,6 +793,8 @@ cusip,ticker,cik,sic,sic_desc,sector,method,retrieved
 713448108,PEP,77476,2080,Beverages,Consumer Staples,sec_sic,2026-08-12
 71377A103,PFGC,1618673,5141,"Wholesale-Groceries, General Line",Consumer Discretionary,sec_sic,2026-08-12
 71385M107,PRM,1880319,2800,Chemicals & Allied Products,Materials,sec_sic,2026-08-12
+71531T105,PSUS,,,,Funds & ETFs,figi_type,2026-08-17
+717081103,PFE,78003,2834,Pharmaceutical Preparations,Health Care,sec_sic,2026-08-17
 718172109,PM,1413329,2111,Cigarettes,Consumer Staples,sec_sic_usfigi,2026-08-12
 722304102,PDD,1737806,7389,"Services-Business Services, NEC",Industrials,sec_sic,2026-08-12
 72348N109,PNFP,2082866,6021,National Commercial Banks,Financials,sec_sic,2026-08-12
@@ -760,6 +805,7 @@ cusip,ticker,cik,sic,sic_desc,sector,method,retrieved
 73278L105,POOL,945841,5090,Wholesale-Misc Durable Goods,Consumer Discretionary,sec_sic,2026-08-12
 732908108,PONY,1969302,7373,Services-Computer Integrated Systems Design,Information Technology,sec_sic,2026-08-12
 73933G202,PSIX,1137091,3510,Engines & Turbines,Industrials,sec_sic,2026-08-12
+74112D101,PBH,1295947,2834,Pharmaceutical Preparations,Health Care,sec_sic_usfigi,2026-08-17
 74144T108,TROW,1113169,6282,Investment Advice,Financials,sec_sic,2026-08-12
 741623102,PRMB,2042694,2080,Beverages,Consumer Staples,sec_sic,2026-08-12
 742718109,PG,80424,2840,"Soap, Detergents, Cleang Preparations, Perfumes, Cosmetics",Materials,sec_sic,2026-08-12
@@ -769,10 +815,12 @@ cusip,ticker,cik,sic,sic_desc,sector,method,retrieved
 74460D109,PSA,1393311,6798,Real Estate Investment Trusts,Real Estate,sec_sic,2026-08-12
 74624M102,P,1474432,3572,Computer Storage Devices,Information Technology,sec_sic,2026-08-12
 74736K101,QRVO,1604778,3674,Semiconductors & Related Devices,Information Technology,sec_sic,2026-08-12
+74743L100,Q,2058873,3674,Semiconductors & Related Devices,Information Technology,sec_sic,2026-08-17
 747525103,QCOM,804328,3663,Radio & Tv Broadcasting & Communications Equipment,Information Technology,sec_sic,2026-08-12
 74758T303,QLYS,1107843,7372,Services-Prepackaged Software,Information Technology,sec_sic,2026-08-12
 74762E102,PWR,1050915,1731,Electrical Work,Industrials,sec_sic,2026-08-12
 74767V109,QS,1811414,3690,"Miscellaneous Electrical Machinery, Equipment & Supplies",Information Technology,sec_sic,2026-08-12
+74768A104,QNT,2110105,7373,Services-Computer Integrated Systems Design,Information Technology,sec_sic,2026-08-17
 74834L100,DGX,1022079,8071,Services-Medical Laboratories,Health Care,sec_sic,2026-08-12
 74935Q107,RBA,1046102,7389,"Services-Business Services, NEC",Industrials,sec_sic,2026-08-12
 74967X103,RH,1528849,5712,Retail-Furniture Stores,Consumer Discretionary,sec_sic,2026-08-12
@@ -798,6 +846,7 @@ cusip,ticker,cik,sic,sic_desc,sector,method,retrieved
 76171L106,REYN,1786431,2673,"Plastics, Foil & Coated Paper Bags",Materials,sec_sic,2026-08-12
 76680R206,RNG,1384905,7374,Services-Computer Processing & Data Preparation,Information Technology,sec_sic,2026-08-12
 767292105,RIOT,1167419,6199,Finance Services,Financials,sec_sic,2026-08-12
+767292AB1,RIOT 0.75 01/15/30,,,,Unclassified,no_us_listing,2026-08-17
 770700102,HOOD,1783879,6211,"Security Brokers, Dealers & Flotation Companies",Financials,sec_sic,2026-08-12
 770701100,RVI,,,,Funds & ETFs,figi_type,2026-08-12
 771049103,RBLX,1315098,7372,Services-Prepackaged Software,Information Technology,sec_sic,2026-08-12
@@ -833,6 +882,7 @@ cusip,ticker,cik,sic,sic_desc,sector,method,retrieved
 79589L106,IOT,1642896,7373,Services-Computer Integrated Systems Design,Information Technology,sec_sic,2026-08-12
 80004C200,SNDK,2023554,3572,Computer Storage Devices,Information Technology,sec_sic,2026-08-12
 80007P869,SD,1349436,1311,Crude Petroleum & Natural Gas,Energy,sec_sic_usfigi,2026-08-12
+801056102,SANM,897723,3672,Printed Circuit Boards,Information Technology,sec_sic,2026-08-17
 80105N105,SNY,1121404,2834,Pharmaceutical Preparations,Health Care,sec_sic,2026-08-12
 80517M109,SVV,1883313,5900,Retail-Miscellaneous Retail,Consumer Discretionary,sec_sic,2026-08-12
 806407102,HSIC,1000228,5047,"Wholesale-Medical, Dental & Hospital Equipment & Supplies",Consumer Discretionary,sec_sic,2026-08-12
@@ -859,11 +909,13 @@ cusip,ticker,cik,sic,sic_desc,sector,method,retrieved
 829401108,SION,2036042,2834,Pharmaceutical Preparations,Health Care,sec_sic,2026-08-12
 82968B103,SIRIEUR,,,,Unclassified,no_us_listing,2026-08-12
 82982L103,SITE,1650729,5040,Wholesale-Professional & Commercial Equipment & Supplies,Consumer Discretionary,sec_sic,2026-08-12
+82982T106,SITM,1451809,3674,Semiconductors & Related Devices,Information Technology,sec_sic,2026-08-17
 829933100,SIRI,908937,4832,Radio Broadcasting Stations,Communication Services,sec_sic,2026-08-12
 83001C108,FUN,1999001,7900,Services-Amusement & Recreation Services,Communication Services,sec_sic,2026-08-12
 830566105,SKAA,,,,Unclassified,no_us_listing,2026-08-12
 830879102,SKYW,793733,4512,"Air Transportation, Scheduled",Industrials,sec_sic,2026-08-12
 83088M102,SWKS,4127,3674,Semiconductors & Related Devices,Information Technology,sec_sic_usfigi,2026-08-12
+83089J108,,,,,Unclassified,no_us_listing,2026-08-17
 83125X103,SNBRQ,827187,2510,Household Furniture,Materials,sec_sic_usfigi,2026-08-12
 831349105,SLDE,1886428,6331,"Fire, Marine & Casualty Insurance",Financials,sec_sic,2026-08-12
 83175M205,SNN,845982,3842,"Orthopedic, Prosthetic & Surgical Appliances & Supplies",Health Care,sec_sic,2026-08-12
@@ -884,6 +936,7 @@ cusip,ticker,cik,sic,sic_desc,sector,method,retrieved
 844741108,LUV,92380,4512,"Air Transportation, Scheduled",Industrials,sec_sic,2026-08-12
 844895102,SWX,1692115,4923,Natural Gas Transmisison & Distribution,Utilities,sec_sic,2026-08-12
 845467109,SWN1EUR,,,,Unclassified,no_us_listing,2026-08-12
+84615Q103,SPCX,1181412,7370,"Services-Computer Programming, Data Processing, Etc.",Information Technology,sec_sic,2026-08-17
 84790A105,SPB,109177,3690,"Miscellaneous Electrical Machinery, Equipment & Supplies",Information Technology,sec_sic,2026-08-12
 85205L107,SWTXUSD,,,,Unclassified,no_us_listing,2026-08-12
 85208M102,SFM,1575515,5411,Retail-Grocery Stores,Consumer Staples,sec_sic,2026-08-12
@@ -892,10 +945,13 @@ cusip,ticker,cik,sic,sic_desc,sector,method,retrieved
 855244109,SBUX,829224,5810,Retail-Eating & Drinking Places,Consumer Discretionary,sec_sic,2026-08-12
 857477103,STT,93751,6022,State Commercial Banks,Financials,sec_sic,2026-08-12
 85914M107,STEP,1796022,6282,Investment Advice,Financials,sec_sic,2026-08-12
+859241101,STRL,874238,1600,Heavy Construction Other Than Bldg Const - Contractors,Industrials,sec_sic_usfigi,2026-08-17
 860897107,SFIX,1576942,5961,Retail-Catalog & Mail-Order Houses,Consumer Discretionary,sec_sic,2026-08-12
+861012102,STM,932787,3674,Semiconductors & Related Devices,Information Technology,sec_sic,2026-08-17
 863667101,SYK,310764,3841,Surgical & Medical Instruments & Apparatus,Health Care,sec_sic,2026-08-12
 86384P109,STUB,1337634,7990,Services-Miscellaneous Amusement & Recreation,Communication Services,sec_sic,2026-08-12
 866683105,SNCY,,,,Unclassified,no_us_listing,2026-08-12
+866796105,SLF,1097362,6311,Life Insurance,Financials,sec_sic_usfigi,2026-08-17
 866966104,SUNB,2083785,7359,"Services-Equipment Rental & Leasing, NEC",Industrials,sec_sic,2026-08-12
 867224107,SU,311337,2911,Petroleum Refining,Energy,sec_sic,2026-08-12
 86765K109,SUN,1552275,2911,Petroleum Refining,Energy,sec_sic,2026-08-12
@@ -907,10 +963,12 @@ cusip,ticker,cik,sic,sic_desc,sector,method,retrieved
 871607107,SNPS,883241,7372,Services-Prepackaged Software,Information Technology,sec_sic,2026-08-12
 87162W100,SNX,1177394,5045,Wholesale-Computers & Peripheral Equipment & Software,Consumer Discretionary,sec_sic_usfigi,2026-08-12
 87165B103,SYF,1601712,6199,Finance Services,Financials,sec_sic,2026-08-12
+871829107,SYY,96021,5140,Wholesale-Groceries & Related Products,Consumer Discretionary,sec_sic,2026-08-17
 87241L109,TFII,1588823,4210,Trucking & Courier Services (No Air),Industrials,sec_sic,2026-08-12
 872540109,TJX,109198,5651,Retail-Family Clothing Stores,Consumer Discretionary,sec_sic,2026-08-12
 87256C101,TKO,1973266,7900,Services-Amusement & Recreation Services,Communication Services,sec_sic,2026-08-12
 872590104,TMUS,1283699,4812,Radiotelephone Communications,Communication Services,sec_sic,2026-08-12
+87305R109,TTMI,1116942,3672,Printed Circuit Boards,Information Technology,sec_sic,2026-08-17
 87318A101,TWFG,2007596,6411,"Insurance Agents, Brokers & Service",Financials,sec_sic,2026-08-12
 874039100,TSM,1046179,3674,Semiconductors & Related Devices,Information Technology,sec_sic,2026-08-12
 874054109,TTWO,946581,7372,Services-Prepackaged Software,Information Technology,sec_sic,2026-08-12
@@ -972,6 +1030,7 @@ cusip,ticker,cik,sic,sic_desc,sector,method,retrieved
 904767704,,,,,Unclassified,no_us_listing,2026-08-12
 907818108,UNP,100885,4011,"Railroads, Line-Haul Operating",Industrials,sec_sic,2026-08-12
 910047109,UAL,100517,4512,"Air Transportation, Scheduled",Industrials,sec_sic,2026-08-12
+910873405,UMC,1033767,3674,Semiconductors & Related Devices,Information Technology,sec_sic,2026-08-17
 911312106,UPS,1090727,4210,Trucking & Courier Services (No Air),Industrials,sec_sic,2026-08-12
 911684108,AD,821130,4812,Radiotelephone Communications,Communication Services,sec_sic,2026-08-12
 912008109,USFD,1665918,5140,Wholesale-Groceries & Related Products,Consumer Discretionary,sec_sic,2026-08-12
@@ -981,6 +1040,7 @@ cusip,ticker,cik,sic,sic_desc,sector,method,retrieved
 91680M107,UPST,1647639,6199,Finance Services,Financials,sec_sic,2026-08-12
 91688F104,UPWK,1627475,7374,Services-Computer Processing & Data Preparation,Information Technology,sec_sic,2026-08-12
 917047102,URBN,912615,5651,Retail-Family Clothing Stores,Consumer Discretionary,sec_sic,2026-08-12
+918090101,UTZ,1739566,2090,Miscellaneous Food Preparations & Kindred Products,Consumer Staples,sec_sic,2026-08-17
 918204108,VFC,103379,2320,"Men's & Boys' Furnishgs, Work Clothg, & Allied Garments",Consumer Discretionary,sec_sic,2026-08-12
 91913Y100,VLO,1035002,2911,Petroleum Refining,Energy,sec_sic,2026-08-12
 92047W101,VVV,1674910,2990,Miscellaneous Products of  Petroleum & Coal,Energy,sec_sic,2026-08-12
@@ -1005,15 +1065,18 @@ cusip,ticker,cik,sic,sic_desc,sector,method,retrieved
 92556H206,0VVB,,,,Unclassified,no_us_listing,2026-08-12
 92556V106,VTRS,1792044,2834,Pharmaceutical Preparations,Health Care,sec_sic,2026-08-12
 92556W104,VIA,1603015,7372,Services-Prepackaged Software,Information Technology,sec_sic,2026-08-12
+925815102,VICR,751978,3679,"Electronic Components, NEC",Information Technology,sec_sic,2026-08-17
 926400102,VSXY,1856437,5621,Retail-Women's Clothing Stores,Consumer Discretionary,sec_sic,2026-08-12
 92686J106,VKTX,1607678,2834,Pharmaceutical Preparations,Health Care,sec_sic,2026-08-12
 92790C104,VRDN,1590750,2834,Pharmaceutical Preparations,Health Care,sec_sic,2026-08-12
 92826C839,V,1403161,7389,"Services-Business Services, NEC",Industrials,sec_sic,2026-08-12
+928298108,VSH,103730,3670,Electronic Components & Accessories,Information Technology,sec_sic,2026-08-17
 928377100,VSTOEUR,,,,Unclassified,no_us_listing,2026-08-12
 92840M102,VST,1692819,4911,Electric Services,Utilities,sec_sic,2026-08-12
 92846Q107,COCO,1482981,2080,Beverages,Consumer Staples,sec_sic,2026-08-12
 92847W103,VITL,1579733,2000,Food and Kindred Products,Consumer Staples,sec_sic,2026-08-12
 92892B103,VOYG,1788060,3760,Guided Missiles & Space Vehicles & Parts,Industrials,sec_sic,2026-08-12
+929089100,VOYA,1535929,6311,Life Insurance,Financials,sec_sic,2026-08-17
 929160109,VMC,1396009,1400,Mining & Quarrying of  Nonmetallic Minerals (No Fuels),Materials,sec_sic,2026-08-12
 929236107,WDFC,105132,2890,Miscellaneous Chemical Products,Materials,sec_sic,2026-08-12
 931142103,WMT,104169,5331,Retail-Variety Stores,Consumer Discretionary,sec_sic,2026-08-12
@@ -1022,6 +1085,7 @@ cusip,ticker,cik,sic,sic_desc,sector,method,retrieved
 934550203,WMG,1319161,7900,Services-Amusement & Recreation Services,Communication Services,sec_sic,2026-08-12
 94106L109,WM,823768,4953,Refuse Systems,Utilities,sec_sic,2026-08-12
 941848103,WAT,1000697,3826,Laboratory Analytical Instruments,Health Care,sec_sic,2026-08-12
+942622200,WSO,105016,5070,Wholesale-Hardware & Plumbing & Heating Equipment & Supplies,Consumer Discretionary,sec_sic,2026-08-17
 94419L101,W,1616707,5961,Retail-Catalog & Mail-Order Houses,Consumer Discretionary,sec_sic,2026-08-12
 947002101,WLTH,1524566,6199,Finance Services,Financials,sec_sic,2026-08-12
 947890109,WBS,801337,6021,National Commercial Banks,Financials,sec_sic,2026-08-12
@@ -1039,15 +1103,18 @@ cusip,ticker,cik,sic,sic_desc,sector,method,retrieved
 96208T104,WEX,1309108,7389,"Services-Business Services, NEC",Industrials,sec_sic,2026-08-12
 962879102,WPM,1323404,1040,Gold and Silver Ores,Materials,sec_sic,2026-08-12
 963320106,WHR,106640,3630,Household Appliances,Industrials,sec_sic,2026-08-12
+96524T101,WHK,1921603,1311,Crude Petroleum & Natural Gas,Energy,sec_sic,2026-08-17
 969904101,WSM,719955,5700,"Retail-Home Furniture, Furnishings & Equipment Stores",Consumer Discretionary,sec_sic,2026-08-12
 971378104,WSC,1647088,7350,Services-Miscellaneous Equipment Rental & Leasing,Industrials,sec_sic,2026-08-12
 974155103,WING,1636222,5812,Retail-Eating  Places,Consumer Discretionary,sec_sic,2026-08-12
 974250102,WINA,908315,5900,Retail-Miscellaneous Retail,Consumer Discretionary,sec_sic_usfigi,2026-08-12
 97717P104,WT,880631,6211,"Security Brokers, Dealers & Flotation Companies",Financials,sec_sic,2026-08-12
+97785W106,WOLF,895419,3674,Semiconductors & Related Devices,Information Technology,sec_sic,2026-08-17
 98138H101,WDAY,1327811,7374,Services-Computer Processing & Data Preparation,Information Technology,sec_sic,2026-08-12
 98139A105,WK,1445305,7372,Services-Prepackaged Software,Information Technology,sec_sic,2026-08-12
 98311A105,WH,1722684,7011,Hotels & Motels,Consumer Discretionary,sec_sic,2026-08-12
 983134107,WYNN,1174922,7011,Hotels & Motels,Consumer Discretionary,sec_sic,2026-08-12
+98386P102,XE,2088896,3443,Fabricated Plate Work (Boiler Shops),Materials,sec_sic,2026-08-17
 98390R102,XNDU,2097163,3571,Electronic Computers,Information Technology,sec_sic,2026-08-12
 98585X104,YETI,1670592,3949,"Sporting & Athletic Goods, NEC",Consumer Discretionary,sec_sic,2026-08-12
 988498101,YUM,1041061,5812,Retail-Eating  Places,Consumer Discretionary,sec_sic,2026-08-12
@@ -1067,24 +1134,26 @@ D18190898,,,,,Unclassified,no_us_listing,2026-08-12
 F21107101,,,,,Unclassified,no_us_listing,2026-08-12
 G00894108,,,,,Unclassified,no_us_listing,2026-08-12
 G0176J109,,,,,Unclassified,no_us_listing,2026-08-12
-G0260P102,AS,1988894,2300,Apparel & Other Finishd Prods of  Fabrics & Similar Matl,Consumer Discretionary,manual_cik,2026-08-12
+G0260P102,AS,1988894,2300,Apparel & Other Finishd Prods of  Fabrics & Similar Matl,Consumer Discretionary,manual_cik,2026-08-17
 G0370L116,,,,,Unclassified,no_us_listing,2026-08-12
-G0403H108,AON,315293,6411,"Insurance Agents, Brokers & Service",Financials,manual_cik,2026-08-12
+G0403H108,AON,315293,6411,"Insurance Agents, Brokers & Service",Financials,manual_cik,2026-08-17
 G0750C108,,,,,Unclassified,no_us_listing,2026-08-12
 G11448100,,,,,Unclassified,no_us_listing,2026-08-12
 G1151C101,,,,,Unclassified,no_us_listing,2026-08-12
 G16910120,,,,,Unclassified,no_us_listing,2026-08-12
 G1890L107,,,,,Unclassified,no_us_listing,2026-08-12
+G2004J103,,,,,Unclassified,no_us_listing,2026-08-17
 G21810109,,,,,Unclassified,no_us_listing,2026-08-12
 G25457105,,,,,Unclassified,no_us_listing,2026-08-12
-G25508105,CRH,849395,3241,"Cement, Hydraulic",Materials,manual_cik,2026-08-12
+G25508105,CRH,849395,3241,"Cement, Hydraulic",Materials,manual_cik,2026-08-17
 G27358103,,,,,Unclassified,no_us_listing,2026-08-12
-G29183103,ETN,1551182,3590,Misc Industrial & Commercial Machinery & Equipment,Industrials,manual_cik,2026-08-12
+G29183103,ETN,1551182,3590,Misc Industrial & Commercial Machinery & Equipment,Industrials,manual_cik,2026-08-17
+G2R11M108,,,,,Unclassified,no_us_listing,2026-08-17
 G31249108,,,,,Unclassified,no_us_listing,2026-08-12
 G32089107,,,,,Unclassified,no_us_listing,2026-08-12
 G3265R107,,,,,Unclassified,no_us_listing,2026-08-12
 G33856108,,,,,Unclassified,no_us_listing,2026-08-12
-G3398L118,PLGO,1636639,6331,"Fire, Marine & Casualty Insurance",Financials,manual_cik,2026-08-12
+G3398L118,PLGO,1636639,6331,"Fire, Marine & Casualty Insurance",Financials,manual_cik,2026-08-17
 G3421J106,,,,,Unclassified,no_us_listing,2026-08-12
 G3643J108,,,,,Unclassified,no_us_listing,2026-08-12
 G39108108,,,,,Unclassified,no_us_listing,2026-08-12
@@ -1092,6 +1161,7 @@ G3934N107,,,,,Unclassified,no_us_listing,2026-08-12
 G3934N115,,,,,Unclassified,no_us_listing,2026-08-12
 G39387108,,,,,Unclassified,no_us_listing,2026-08-12
 G4124C109,,,,,Unclassified,no_us_listing,2026-08-12
+G4124C117,,,,,Unclassified,no_us_listing,2026-08-17
 G4253H101,,,,,Unclassified,no_us_listing,2026-08-12
 G4412G101,,,,,Unclassified,no_us_listing,2026-08-12
 G4627B103,,,,,Unclassified,no_us_listing,2026-08-12
@@ -1100,9 +1170,9 @@ G4740B105,,,,,Unclassified,no_us_listing,2026-08-12
 G4863A108,,,,,Unclassified,no_us_listing,2026-08-12
 G48833118,,,,,Unclassified,no_us_listing,2026-08-12
 G50737124,,,,,Unclassified,no_us_listing,2026-08-12
-G51502105,JCI,833444,3585,Air-Cond & Warm Air Heatg Equip & Comm & Indl Refrig Equip,Industrials,manual_cik,2026-08-12
+G51502105,JCI,833444,3585,Air-Cond & Warm Air Heatg Equip & Comm & Indl Refrig Equip,Industrials,manual_cik,2026-08-17
 G5279N105,,,,,Unclassified,no_us_listing,2026-08-12
-G54950103,LIN,1707925,2810,Industrial Inorganic Chemicals,Materials,manual_cik,2026-08-12
+G54950103,LIN,1707925,2810,Industrial Inorganic Chemicals,Materials,manual_cik,2026-08-17
 G5509L101,,,,,Unclassified,no_us_listing,2026-08-12
 G5784H106,,,,,Unclassified,no_us_listing,2026-08-12
 G61188101,,,,,Unclassified,no_us_listing,2026-08-12
@@ -1111,9 +1181,9 @@ G65163100,,,,,Unclassified,no_us_listing,2026-08-12
 G65431127,,,,,Unclassified,no_us_listing,2026-08-12
 G66721104,,,,,Unclassified,no_us_listing,2026-08-12
 G6674U108,,,,,Unclassified,no_us_listing,2026-08-12
-G6683N103,NU,1691493,6199,Finance Services,Financials,manual_cik,2026-08-12
+G6683N103,NU,1691493,6199,Finance Services,Financials,manual_cik,2026-08-17
 G68707101,,,,,Unclassified,no_us_listing,2026-08-12
-G76279101,ROIV,1635088,2834,Pharmaceutical Preparations,Health Care,manual_cik,2026-08-12
+G76279101,ROIV,1635088,2834,Pharmaceutical Preparations,Health Care,manual_cik,2026-08-17
 G7709Q104,,,,,Unclassified,no_us_listing,2026-08-12
 G7997R103,,,,,Unclassified,no_us_listing,2026-08-12
 G7997W102,,,,,Unclassified,no_us_listing,2026-08-12
@@ -1122,16 +1192,18 @@ G8068L108,,,,,Unclassified,no_us_listing,2026-08-12
 G81276100,,,,,Unclassified,no_us_listing,2026-08-12
 G8192H106,,,,,Unclassified,no_us_listing,2026-08-12
 G85158106,,,,,Unclassified,no_us_listing,2026-08-12
+G87052109,,,,,Unclassified,no_us_listing,2026-08-17
 G87110105,,,,,Unclassified,no_us_listing,2026-08-12
 G9001E102,,,,,Unclassified,no_us_listing,2026-08-12
 G9001E128,,,,,Unclassified,no_us_listing,2026-08-12
 G9456A100,,,,,Unclassified,no_us_listing,2026-08-12
 G9572D103,,,,,Unclassified,no_us_listing,2026-08-12
+G9600F104,,,,,Unclassified,no_us_listing,2026-08-17
 G96115103,,,,,Unclassified,no_us_listing,2026-08-12
 G97822103,,,,,Unclassified,no_us_listing,2026-08-12
 H01301128,,,,,Unclassified,no_us_listing,2026-08-12
 H11356104,,,,,Unclassified,no_us_listing,2026-08-12
-H1467J104,CB,896159,6331,"Fire, Marine & Casualty Insurance",Financials,manual_cik,2026-08-12
+H1467J104,CB,896159,6331,"Fire, Marine & Casualty Insurance",Financials,manual_cik,2026-08-17
 H2627K103,,,,,Unclassified,no_us_listing,2026-08-12
 H2906T109,,,,,Unclassified,no_us_listing,2026-08-12
 H2927K103,,,,,Unclassified,no_us_listing,2026-08-12
@@ -1143,24 +1215,28 @@ H5919C104,,,,,Unclassified,no_us_listing,2026-08-12
 L00849106,,,,,Unclassified,no_us_listing,2026-08-12
 L02235106,,,,,Unclassified,no_us_listing,2026-08-12
 L7579L106,,,,,Unclassified,no_us_listing,2026-08-12
-L8681T102,SPOT,1639920,4832,Radio Broadcasting Stations,Communication Services,manual_cik,2026-08-12
+L8681T102,SPOT,1639920,4832,Radio Broadcasting Stations,Communication Services,manual_cik,2026-08-17
 M2029K104,,,,,Unclassified,no_us_listing,2026-08-12
+M20791105,,,,,Unclassified,no_us_listing,2026-08-17
 M22465104,,,,,Unclassified,no_us_listing,2026-08-12
 M4R82T106,,,,,Unclassified,no_us_listing,2026-08-12
 M6191J100,,,,,Unclassified,no_us_listing,2026-08-12
+M7516K103,,,,,Unclassified,no_us_listing,2026-08-17
 M7518J104,,,,,Unclassified,no_us_listing,2026-08-12
 M7S64H106,,,,,Unclassified,no_us_listing,2026-08-12
 M8744T106,,,,,Unclassified,no_us_listing,2026-08-12
 M87915274,,,,,Unclassified,no_us_listing,2026-08-12
 M98068105,,,,,Unclassified,no_us_listing,2026-08-12
 M9T951109,,,,,Unclassified,no_us_listing,2026-08-12
-N07059210,ASML,937966,3559,"Special Industry Machinery, NEC",Industrials,manual_cik,2026-08-12
+N07059210,ASML,937966,3559,"Special Industry Machinery, NEC",Industrials,manual_cik,2026-08-17
 N14506104,,,,,Unclassified,no_us_listing,2026-08-12
 N20944109,,,,,Unclassified,no_us_listing,2026-08-12
 N3144W105,,,,,Unclassified,no_us_listing,2026-08-12
 N3167Y103,,,,,Unclassified,no_us_listing,2026-08-12
-N3168P101,FER,1468522,1600,Heavy Construction Other Than Bldg Const - Contractors,Industrials,manual_cik,2026-08-12
-N62509109,NAMS,1936258,2834,Pharmaceutical Preparations,Health Care,manual_cik,2026-08-12
+N3168P101,FER,1468522,1600,Heavy Construction Other Than Bldg Const - Contractors,Industrials,manual_cik,2026-08-17
+N52A8C105,,,,,Unclassified,no_us_listing,2026-08-17
+N5505D105,,,,,Unclassified,no_us_listing,2026-08-17
+N62509109,NAMS,1936258,2834,Pharmaceutical Preparations,Health Care,manual_cik,2026-08-17
 N69605108,,,,,Unclassified,no_us_listing,2026-08-12
 N69958101,,,,,Unclassified,no_us_listing,2026-08-12
 N70544106,,,,,Unclassified,no_us_listing,2026-08-12
@@ -1168,7 +1244,7 @@ N82405106,,,,,Unclassified,no_us_listing,2026-08-12
 N90064101,,,,,Unclassified,no_us_listing,2026-08-12
 N97284108,,,,,Unclassified,no_us_listing,2026-08-12
 P5626F128,,,,,Unclassified,no_us_listing,2026-08-12
-Q4982L109,IREN,1878848,6199,Finance Services,Financials,manual_cik,2026-08-12
+Q4982L109,IREN,1878848,6199,Finance Services,Financials,manual_cik,2026-08-17
 Y2065G121,,,,,Unclassified,no_us_listing,2026-08-12
 Y2573F102,,,,,Unclassified,no_us_listing,2026-08-12
 Y95308105,,,,,Unclassified,no_us_listing,2026-08-12
