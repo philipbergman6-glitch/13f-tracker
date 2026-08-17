@@ -372,11 +372,38 @@ def render(payload: dict) -> str:
     return html.replace("/*__DATA__*/null", blob)
 
 
+RUN_STATUS_PATH = OUT / "run_status.json"
+
+
+def check_run_status(path: Path = RUN_STATUS_PATH) -> None:
+    """Refuse to rebuild the dashboard over a failed pipeline run.
+
+    The previous approved dashboard/index.html stays in place until a run
+    passes the filer-status and validation gates. Raises SystemExit with an
+    explanation; --allow-failed-run overrides after manual review.
+    """
+    if not path.exists():
+        raise SystemExit(
+            f"{path} missing — run src/pipeline.py first (the dashboard only "
+            f"builds over a gated pipeline run)")
+    run = json.loads(path.read_text(encoding="utf-8"))
+    if not run.get("ok"):
+        raise SystemExit(
+            f"last pipeline run FAILED ({run.get('completed_utc')}: blocked="
+            f"{run.get('blocked')}, validation_errors="
+            f"{run.get('validation_errors')}) — dashboard left untouched; fix "
+            f"the run or pass --allow-failed-run after manual review")
+
+
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--quarter", default=None, help="as-of quarter, e.g. 2026Q1")
     ap.add_argument("--out", default=str(DEFAULT_OUT))
+    ap.add_argument("--allow-failed-run", action="store_true",
+                    help="rebuild even though the last pipeline run failed")
     args = ap.parse_args()
+    if not args.allow_failed_run:
+        check_run_status()
     payload = build_payload(args.quarter)
     out = Path(args.out)
     out.parent.mkdir(parents=True, exist_ok=True)

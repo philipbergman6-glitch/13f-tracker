@@ -51,7 +51,8 @@ def _cik_url_name(cik: int) -> str:
 FORMS_13F = ("13F-HR", "13F-HR/A", "13F-NT", "13F-NT/A")
 
 
-def list_13f_filings(cik: int, earliest_report_date: str) -> list[Filing]:
+def list_13f_filings(cik: int, earliest_report_date: str,
+                     force_refresh: bool = False) -> list[Filing]:
     """All 13F filings (HR and NT, incl. amendments) for cik with
     report_date >= earliest_report_date.
 
@@ -61,11 +62,14 @@ def list_13f_filings(cik: int, earliest_report_date: str) -> list[Filing]:
 
     Reads the 'recent' block of the submissions JSON; follows the paged history
     files if 'recent' does not reach back to earliest_report_date.
+    force_refresh bypasses the same-day cache on these mutable indexes — required
+    before publication so same-day filings and amendments are seen.
     """
     sub_path = fetch_cached(
         SUBMISSIONS_URL.format(name=_cik_url_name(cik)),
         RAW / str(cik) / "submissions.json",
         mutable=True,
+        force=force_refresh,
     )
     sub = load_json(sub_path)
     blocks = [sub["filings"]["recent"]]
@@ -78,6 +82,7 @@ def list_13f_filings(cik: int, earliest_report_date: str) -> list[Filing]:
                 SUBMISSIONS_URL.format(name=extra["name"]),
                 RAW / str(cik) / extra["name"],
                 mutable=True,
+                force=force_refresh,
             )
             blocks.append(load_json(extra_path))
 

@@ -78,6 +78,37 @@ class TestFetchCached(unittest.TestCase):
             common.fetch_cached("u", dest, mutable=True)
         self.assertEqual(dest.read_bytes(), b"body")
 
+    def test_force_bypasses_same_day_cache_and_archives(self):
+        dest = self.write_cached(b"morning")
+        with mock.patch.object(common, "http_get", return_value=b"afternoon"):
+            common.fetch_cached("u", dest, mutable=True, force=True)
+        self.assertEqual(dest.read_bytes(), b"afternoon")
+        archived = list((self.raw / "_archive" / "superseded").rglob("submissions.json"))
+        self.assertEqual(len(archived), 1)
+        self.assertEqual(archived[0].read_bytes(), b"morning")
+
+    def test_force_unchanged_body_restamped_not_archived(self):
+        dest = self.write_cached(b"same")
+        with mock.patch.object(common, "http_get", return_value=b"same"):
+            common.fetch_cached("u", dest, mutable=True, force=True)
+        self.assertFalse((self.raw / "_archive").exists())
+
+    def test_force_never_refetches_immutable(self):
+        dest = self.write_cached(b"doc", mtime=YESTERDAY)
+        with mock.patch.object(common, "http_get") as get:
+            common.fetch_cached("u", dest, force=True)
+        get.assert_not_called()
+
+    def test_same_day_rearchive_never_clobbers(self):
+        dest = self.write_cached(b"v1")
+        with mock.patch.object(common, "http_get", return_value=b"v2"):
+            common.fetch_cached("u", dest, mutable=True, force=True)
+        with mock.patch.object(common, "http_get", return_value=b"v3"):
+            common.fetch_cached("u", dest, mutable=True, force=True)
+        archived = sorted((self.raw / "_archive" / "superseded").rglob("submissions.json*"))
+        self.assertEqual([p.read_bytes() for p in archived], [b"v1", b"v2"])
+        self.assertEqual(dest.read_bytes(), b"v3")
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -20,6 +20,9 @@ watchlists. Terminology in CONTEXT.md; decisions in `.scratch\13f-tracker\` (way
 - `data\holdings\filer_status.csv` — committed per-filer quarterly status
   (HOLDINGS / NT / DUPLICATE / NOT_DUE / LATE / ERROR); LATE or ERROR blocks
   publication of that manager-quarter and fails the pipeline run
+- `data\out\validation.csv` + `data\out\run_status.json` — per-run validation
+  findings and run outcome; validation ERRORs block publication, and
+  `dashboard.py` refuses to rebuild over a failed run
 - `data\ref\` — committed reference tables (manager map, CUSIP→ticker cache)
 - `notes\` — working notes / findings
 - `docs\adr\` — architecture decision records

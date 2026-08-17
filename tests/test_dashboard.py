@@ -234,5 +234,30 @@ class TestPinnedQuarter(unittest.TestCase):
         self.assertEqual(credited - set(quarter_of), set())
 
 
+class TestRunStatusGate(unittest.TestCase):
+    """A failed pipeline run must never overwrite the approved dashboard."""
+
+    def check(self, content: str | None):
+        import json
+        import tempfile
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "run_status.json"
+            if content is not None:
+                path.write_text(content, encoding="utf-8")
+            db.check_run_status(path)
+
+    def test_missing_run_status_refuses(self):
+        with self.assertRaisesRegex(SystemExit, "run src/pipeline.py first"):
+            self.check(None)
+
+    def test_failed_run_refuses(self):
+        with self.assertRaisesRegex(SystemExit, "FAILED"):
+            self.check('{"ok": false, "blocked": ["Mgr 2026Q2"], '
+                       '"validation_errors": 1}')
+
+    def test_ok_run_passes(self):
+        self.check('{"ok": true, "blocked": [], "validation_errors": 0}')
+
+
 if __name__ == "__main__":
     unittest.main()
