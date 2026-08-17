@@ -171,8 +171,9 @@ def takeaways(name: str, qkey: str, prev_qkey: str | None, stats: dict,
     if stats["qoq_pct"] is not None and prev_qkey:
         out.append(
             f"{name} ended {qlabel(qkey)} with a {fmt_usd(stats['value'])} "
-            f"main book across {stats['n_positions']} positions, "
-            f"{fmt_signed_pct(stats['qoq_pct'])} vs {qlabel(prev_qkey)}.")
+            f"reported main book across {stats['n_positions']} positions, "
+            f"{fmt_signed_pct(stats['qoq_pct'])} vs {qlabel(prev_qkey)} in "
+            f"reported value (not performance or net flows).")
     else:
         out.append(
             f"{name} ended {qlabel(qkey)} with a {fmt_usd(stats['value'])} "
@@ -224,6 +225,43 @@ def load_changes_rows(slug: str, qkey: str) -> list[dict]:
         return list(csv.DictReader(fh))
 
 
+def load_pipeline_flags() -> dict[tuple[str, str], str]:
+    """(filer_cik, quarter) -> problem, from data/out/flags.csv (pipeline run).
+
+    Covers amendment-chain problems and cross-filer duplicate-book drops
+    (build.py); used to explain why a mapped filer contributed no rows.
+    """
+    path = OUT / "flags.csv"
+    if not path.exists():
+        return {}
+    with open(path, newline="", encoding="utf-8") as fh:
+        return {(r["filer_cik"], r["quarter"]): r["problem"]
+                for r in csv.DictReader(fh)}
+
+
+def contributing_ciks(path: Path) -> set[str]:
+    with open(path, newline="", encoding="utf-8") as fh:
+        return {r["filer_cik"] for r in csv.DictReader(fh)}
+
+
+def filer_entries(mgr_spans: list, qkey: str, holdings_path: Path,
+                  flags: dict[tuple[str, str], str]) -> list[dict]:
+    """Every mapped filer for the quarter, with an honest contribution status."""
+    contributed = contributing_ciks(holdings_path)
+    entries = []
+    for s in mgr_spans:
+        if not s.covers(qkey):
+            continue
+        note = None
+        if str(s.cik) not in contributed:
+            problem = flags.get((str(s.cik), qkey), "")
+            note = ("duplicate of another filer's book — excluded"
+                    if "duplicate" in problem else "no filing in this book")
+        entries.append({"name": s.filer_name, "cik": s.cik,
+                        "contributed": str(s.cik) in contributed, "note": note})
+    return entries
+
+
 def load_aum_by_manager() -> dict[str, dict]:
     """manager -> its data/ref/aum.csv row (ticket 04's external AUM table)."""
     with open(REF / "aum.csv", newline="", encoding="utf-8") as fh:
@@ -251,6 +289,7 @@ def build_payload(quarter: str | None = None) -> dict:
     managers = sorted({s.manager for s in spans})
     aum_by_manager = load_aum_by_manager()
     sector_of = load_sector_map()
+    flags = load_pipeline_flags()
 
     latest = {}
     for m in managers:
@@ -292,8 +331,7 @@ def build_payload(quarter: str | None = None) -> dict:
             "quarter_label": qlabel(qkey), "prev_quarter": prev_q,
             "prev_quarter_label": qlabel(prev_q) if prev_q else None,
             "later_filing": latest.get(slug) if latest.get(slug, qkey) > qkey else None,
-            "filers": [{"name": s.filer_name, "cik": s.cik} for s in mgr_spans
-                       if s.covers(qkey)],
+            "filers": filer_entries(mgr_spans, qkey, cur_path, flags),
             "accessions": load_accessions(cur_path),
             "stats": stats,
             "aum": {

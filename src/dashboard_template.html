@@ -485,6 +485,7 @@ function managerCard(m) {
   a.append(el("div", "cname", m.manager));
   a.append(el("div", "cval num", fmtUSD(m.stats.value)));
   const d = el("div", "cdelta num");
+  d.title = "Change in reported 13F value — not performance or net flows";
   if (m.stats.qoq_pct !== null) {
     d.append(deltaSpan(m.stats.qoq_pct));
     d.append(el("span", "vs", " vs " + qlabel(m.prev_quarter)));
@@ -521,7 +522,8 @@ function renderManager(slug) {
   head.append(el("h1", "serif", m.manager));
   const filers = el("div", "filers");
   filers.append(document.createTextNode(
-    m.filers.map(f => f.name + " (CIK " + f.cik + ")").join(" · ")));
+    m.filers.map(f => f.name + " (CIK " + f.cik + ")" +
+      (f.note ? " — " + f.note : "")).join(" · ")));
   head.append(filers);
   if (m.later_filing) {
     head.append(el("div", "qnote",
@@ -574,7 +576,8 @@ function renderTiles(m) {
   if (s.qoq_pct !== null) {
     heroSub.push(deltaSpan(s.qoq_pct));
     heroSub.push(document.createTextNode(
-      " vs " + qlabel(m.prev_quarter) + " (" + fmtUSD(s.value_prev) + ")"));
+      " vs " + qlabel(m.prev_quarter) + " (" + fmtUSD(s.value_prev) + ")" +
+      " · reported value change, not performance"));
   } else {
     heroSub.push(document.createTextNode("first tracked quarter"));
   }
