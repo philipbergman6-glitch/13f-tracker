@@ -1,11 +1,11 @@
 {
   "suite": "python -m unittest discover -s tests",
   "python": "3.14.6",
-  "tests_ran": 159,
+  "tests_ran": 154,
   "passed": true,
-  "run_utc": "2026-08-17T18:41:33+00:00",
+  "run_utc": "2026-08-17T18:21:46+00:00",
   "output_tail": [
-    "Ran 159 tests in 1.344s",
+    "Ran 154 tests in 1.400s",
     "",
     "OK"
   ]

@@ -1,6 +1,6 @@
 # Evidence package — 2026Q2 release
 
-Generated 2026-08-17T18:41:34+00:00 from pipeline run 2026-08-17T18:41:31+00:00 (window 2024Q2–2026Q2, force_refresh=True), source commit `c66d14d4dc86` with 9 uncommitted change(s) at generation time.
+Generated 2026-08-17T18:23:49+00:00 from pipeline run 2026-08-17T18:23:46+00:00 (window 2024Q2–2026Q2, force_refresh=True), source commit `1e6334142fd3` with 27 uncommitted change(s) at generation time.
 
 Every figure below is copied from that run's outputs (nothing re-derived); machine-readable appendices sit next to this report. Required-item checklist:
 
@@ -117,7 +117,7 @@ Every mapped (manager, filer, quarter) in the window has an explicit committed s
 
 ## 6. Automated tests
 
-`python -m unittest discover -s tests` (Python 3.14.6): **159 tests, PASS**, run 2026-08-17T18:41:33+00:00 (`test_results.json`). A failing suite blocks this package.
+`python -m unittest discover -s tests` (Python 3.14.6): **155 tests, PASS**, run 2026-08-17T18:23:48+00:00 (`test_results.json`). A failing suite blocks this package.
 
 ## 7. Known exceptions
 
@@ -136,14 +136,14 @@ Accepted filer-side discrepancies and scope decisions, from the committed regist
 
 ## 8. Checksums and versions
 
-`checksums.csv` holds SHA-256 digests for the release dashboard build and all 351 source data files it derives from (holdings CSVs, filer statuses, reference tables, change tables, run gate outputs). At publication, release.py re-verifies every digest against the artifacts being published. Source code version: commit `c66d14d4dc8661fecfe5243e17bd988e8dc4228e` (2026-08-17T21:41:10+03:00).
+`checksums.csv` holds SHA-256 digests for the release dashboard build and all 351 source data files it derives from (holdings CSVs, filer statuses, reference tables, change tables, run gate outputs). At publication, release.py re-verifies every digest against the artifacts being published. Source code version: commit `1e6334142fd324ea82340b8867f2774340443280` (2026-08-17T20:16:46+03:00).
 
-- `dashboard/staging/index.html` — SHA-256 `a15b4a908ac0a63470057c94421807e9f6e8207b11ea706233c0dbe143214a11`
+- `dashboard/staging/index.html` — SHA-256 `5177418c9368716e719bc114420e071cbdab0ae895b0fddc182b403c8a3b82d0`
 
 ## 9. How to reproduce this release
 
 ```
-git checkout c66d14d4dc8661fecfe5243e17bd988e8dc4228e
+git checkout 1e6334142fd324ea82340b8867f2774340443280
 python src/release.py stage --quarter 2026Q2 --start 2024Q2 --end 2026Q2
 ```
 

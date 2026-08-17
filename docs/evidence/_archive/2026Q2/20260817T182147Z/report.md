@@ -1,6 +1,6 @@
 # Evidence package — 2026Q2 release
 
-Generated 2026-08-17T18:41:34+00:00 from pipeline run 2026-08-17T18:41:31+00:00 (window 2024Q2–2026Q2, force_refresh=True), source commit `c66d14d4dc86` with 9 uncommitted change(s) at generation time.
+Generated 2026-08-17T17:13:37+00:00 from pipeline run 2026-08-17T17:12:06+00:00 (window 2024Q2–2026Q2, force_refresh=True), source commit `1a5f1ddb4821` with 6 uncommitted change(s) at generation time.
 
 Every figure below is copied from that run's outputs (nothing re-derived); machine-readable appendices sit next to this report. Required-item checklist:
 
@@ -13,10 +13,9 @@ Every figure below is copied from that run's outputs (nothing re-derived); machi
 | 5 | Parsed-vs-source reconciliation (rows and values) | `filings.csv` |
 | 6 | Amendment-merge and duplicate decisions | `merge_decisions.csv` |
 | 7 | Multi-filer completeness | `filer_status.csv` |
-| 8 | Warning classifications and dispositions | `warning_dispositions.csv` |
-| 9 | Automated test results | `test_results.json` |
-| 10 | Known exceptions and reviewer sign-off | `exceptions.csv + report.md` |
-| 11 | SHA-256 checksums and source version | `checksums.csv + manifest.json` |
+| 8 | Automated test results | `test_results.json` |
+| 9 | Known exceptions and reviewer sign-off | `exceptions.csv + report.md` |
+| 10 | SHA-256 checksums and source version | `checksums.csv + manifest.json` |
 
 ## 1. Filings used
 
@@ -113,11 +112,11 @@ Every mapped (manager, filer, quarter) in the window has an explicit committed s
 
 ## 5. Validation findings
 
-0 errors, 42 warnings (`validation.csv`); **42 dispositioned and 0 unresolved**. Errors and any undispositioned warning block publication. `warning_dispositions.csv` records the classification, resolution, evidence reference, reviewer, and review date for every warning. Classification counts: confirmed-reported-trade=17, confirmed-warrant-movement=1, corporate-action=3, filer-identifier-anomaly=1, filer-identifier-error=1, filer-label-error=2, filer-value-anomaly=2, issuer-label-variation=2, issuer-name-change=13.
+0 errors, 42 warnings (`validation.csv`; errors block publication). Warning classes are calibrated against accepted SEC filings — see `notes/phase2-production-controls.md`.
 
 ## 6. Automated tests
 
-`python -m unittest discover -s tests` (Python 3.14.6): **159 tests, PASS**, run 2026-08-17T18:41:33+00:00 (`test_results.json`). A failing suite blocks this package.
+`python -m unittest discover -s tests` (Python 3.14.6): **145 tests, PASS**, run 2026-08-17T17:13:35+00:00 (`test_results.json`). A failing suite blocks this package.
 
 ## 7. Known exceptions
 
@@ -130,20 +129,17 @@ Accepted filer-side discrepancies and scope decisions, from the committed regist
 | EXC-003 | 2025Q3 | TCI | cover-page-mismatch | Cover-page tableValueTotal is $1 above the info-table value sum | Filer-side rounding on the cover page. The filed info table is authoritative; the committed CSV matches it to the dollar |
 | EXC-004 | 2024Q2 | Altimeter | cusip-cross-label | Altimeter's 2024Q2 filing swaps the issuer labels on CUSIPs 023135106 (Amazon) and 04626A103 (Astera Labs): 023135106 is labelled ASTERA LABS INC and 04626A103 AMAZON COM INC, the reverse of the CUSIPs' true issuers as filed by Maverick (acc 0000947871-24-000690) and all later quarters | Filer-side labelling error in the original filing, never amended. Committed CSVs faithfully reproduce the filed rows; the identity validation check (WARN) flags the disagreement each run. Ticker/sector joins key on CUSIP, so downstream aggregation is unaffected by the swapped labels |
 | EXC-005 | 2026Q2 | Situational Awareness | scope-out | Situational Awareness Partners LP (CIK 2038540) filed no 13F-HR and no 13F-NT for 2026Q2; the Rule 13f-1 deadline was 2026-08-14. Its only 13F ever (2026Q1) was an exact duplicate of Situational Awareness LP's (CIK 2045724) book | Analyst decision (Philip, 2026-08-17): CIK 2038540 scoped to to_quarter=2026Q1 in manager_map.csv. Schedule 13G acc 0000935836-26-000303 names the LP as investment adviser to the Fund with jointly attributed positions, so the Adviser's 13F-HR carries the consolidated portfolio. Portfolio-coverage decision, not a legal conclusion; the CIK is monitored and an out-of-span 13F-HR from it fails the run |
-| EXC-006 | 2025Q3 | Maverick Capital | filer-value-anomaly | Maverick reports Curis value $6,194 for 49,554 shares, implying $0.125 per share; an independent same-quarter accepted 13F reports a price near $2.32 | Preserve the original filed value and shares. Treat the quarter-over-quarter price warning as a documented filer-side value anomaly; do not normalize the immutable holdings row |
-| EXC-007 | 2026Q2 | Giverny | filer-value-anomaly | Giverny reports SPDR Gold Shares value $25,033,146 for 3,876 shares, implying $6,458.50 per share versus approximately $368 in independent same-quarter 13F filings | Preserve the original filed value and shares and flag the reported portfolio value as filer-overstated. Do not silently replace it with an estimated market value |
-| EXC-008 | 2026Q1 | Leon Cooperman | filer-identifier-error | The filing reports Amrize under H2627K103; official Amrize filings identify the security as H2927K103 | Preserve H2627K103 in the immutable holdings row. Map it to H2927K103 only in the documented comparison alias so the typo cannot create false exit/new signals |
 
 ## 8. Checksums and versions
 
-`checksums.csv` holds SHA-256 digests for the release dashboard build and all 351 source data files it derives from (holdings CSVs, filer statuses, reference tables, change tables, run gate outputs). At publication, release.py re-verifies every digest against the artifacts being published. Source code version: commit `c66d14d4dc8661fecfe5243e17bd988e8dc4228e` (2026-08-17T21:41:10+03:00).
+`checksums.csv` holds SHA-256 digests for the release dashboard build and all 348 source data files it derives from (holdings CSVs, filer statuses, reference tables, change tables, run gate outputs). At publication, release.py re-verifies every digest against the artifacts being published. Source code version: commit `1a5f1ddb48214dd0213fa65999b8f6c2182f8630` (2026-08-17T20:13:30+03:00).
 
-- `dashboard/staging/index.html` — SHA-256 `a15b4a908ac0a63470057c94421807e9f6e8207b11ea706233c0dbe143214a11`
+- `dashboard/staging/index.html` — SHA-256 `9023de90e406bd604155814de2ed1e9bda6ed95d97a572ef80c581d781b46aec`
 
 ## 9. How to reproduce this release
 
 ```
-git checkout c66d14d4dc8661fecfe5243e17bd988e8dc4228e
+git checkout 1a5f1ddb48214dd0213fa65999b8f6c2182f8630
 python src/release.py stage --quarter 2026Q2 --start 2024Q2 --end 2026Q2
 ```
 
@@ -155,6 +151,6 @@ Raw EDGAR responses cache under `data/raw/` (re-fetchable; superseded mutable in
 
 Completed by a human reviewer before the release is considered approved: replace each blank below, commit this file, then run `python src/release.py publish --quarter 2026Q2`. The publish gate blocks unless the decision line begins with `approve` and the signed report is committed; regenerating this package rewrites the block blank, so a stale approval can never carry over.
 
-- Reviewer name: ______________________
-- Review date (YYYY-MM-DD): ______________________
-- Decision (approve / reject, with notes): ______________________
+- Reviewer name: Philip Bergman
+- Review date (YYYY-MM-DD): 2026-08-17
+- Decision (approve / reject, with notes): approve — reviewed reconciliation and exceptions

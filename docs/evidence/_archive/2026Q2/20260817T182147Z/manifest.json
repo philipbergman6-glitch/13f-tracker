@@ -1,22 +1,19 @@
 {
   "release_quarter": "2026Q2",
-  "generated_utc": "2026-08-17T18:41:34+00:00",
-  "source_commit": "c66d14d4dc8661fecfe5243e17bd988e8dc4228e",
-  "source_commit_date": "2026-08-17T21:41:10+03:00",
+  "generated_utc": "2026-08-17T17:13:37+00:00",
+  "source_commit": "1a5f1ddb48214dd0213fa65999b8f6c2182f8630",
+  "source_commit_date": "2026-08-17T20:13:30+03:00",
   "uncommitted_changes_at_generation": [
     "M docs/evidence/2026Q2/checksums.csv",
-    " M docs/evidence/2026Q2/exceptions.csv",
     " M docs/evidence/2026Q2/manifest.json",
     " M docs/evidence/2026Q2/report.md",
     " M docs/evidence/2026Q2/test_results.json",
     "?? .scratch/",
-    "?? docs/evidence/2026Q2/warning_dispositions.csv",
-    "?? docs/evidence/_archive/2026Q2/20260817T182147Z/",
-    "?? docs/evidence/_archive/2026Q2/20260817T182349Z/"
+    "?? docs/evidence/_archive/"
   ],
   "pipeline_run": {
     "ok": true,
-    "completed_utc": "2026-08-17T18:41:31+00:00",
+    "completed_utc": "2026-08-17T17:12:06+00:00",
     "window": [
       "2024Q2",
       "2026Q2"
@@ -25,18 +22,10 @@
     "blocked": [],
     "validation_errors": 0,
     "validation_warnings": 42,
-    "validation_warnings_dispositioned": 42,
-    "unresolved_validation_warnings": [],
-    "invalid_warning_dispositions": 0,
     "same_day_filings": []
   },
   "n_filings": 201,
-  "warning_dispositions": {
-    "warnings": 42,
-    "dispositioned": 42,
-    "unresolved": 0
-  },
-  "n_checksummed_files": 352,
+  "n_checksummed_files": 349,
   "package_files": [
     "checksums.csv",
     "exceptions.csv",
@@ -46,7 +35,6 @@
     "merge_decisions.csv",
     "test_results.json",
     "validation.csv",
-    "warning_dispositions.csv",
     "report.md"
   ]
 }
