@@ -1,6 +1,6 @@
 manager,filer_cik,filer_name,from_quarter,to_quarter,notes
 Situational Awareness,2045724,Situational Awareness LP,2024Q4,,first 13F-HR period 2024-12-31; only ~6 quarters exist
-Situational Awareness,2038540,Situational Awareness Partners LP,2026Q1,,sibling filer; first 13F-HR period 2026-03-31; relationship to LP unverified
+Situational Awareness,2038540,Situational Awareness Partners LP,2026Q1,2026Q1,"underlying fund of adviser CIK 2045724 (Schedule 13G acc 0000935836-26-000303, retrieved 2026-08-17); its only 13F (2026Q1) duplicated the adviser's book; portfolio tracked via adviser from 2026Q2 — monitor for renewed filings"
 Altimeter,1541617,"Altimeter Capital Management, LP",,,
 Atreides,1777813,"Atreides Management, LP",,,
 Coatue,1135730,COATUE MANAGEMENT LLC,,,
