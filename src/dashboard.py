@@ -442,21 +442,16 @@ def run_status_summary(run: dict | None) -> dict:
     if run is None:
         return {"state": "unknown",
                 "label": "no gated pipeline run on record",
-                "completed_utc": None, "errors": None, "warnings": None}
+                "completed_utc": None, "errors": None}
     errors = int(run.get("validation_errors") or 0)
-    warnings = int(run.get("validation_warnings") or 0)
-    dispositioned = int(run.get("validation_warnings_dispositioned") or 0)
     unresolved = len(run.get("unresolved_validation_warnings") or [])
     invalid_dispositions = int(run.get("invalid_warning_dispositions") or 0)
     blocked = run.get("blocked") or []
     if run.get("ok"):
         return {"state": "passed",
-                "label": (f"checks passed · {errors} validation errors · "
-                          f"{warnings} warnings · "
-                          f"{dispositioned} dispositioned"),
+                "label": "checks passed",
                 "completed_utc": run.get("completed_utc"),
-                "errors": errors, "warnings": warnings,
-                "dispositioned": dispositioned}
+                "errors": errors}
     parts = ([f"{len(blocked)} manager-quarter(s) blocked"] if blocked else []) \
         + ([f"{errors} validation errors"] if errors else []) \
         + ([f"{unresolved} unresolved warnings"] if unresolved else []) \
@@ -466,7 +461,7 @@ def run_status_summary(run: dict | None) -> dict:
             "label": "checks FAILED — " + (", ".join(parts)
                                            or "see data/out/run_status.json"),
             "completed_utc": run.get("completed_utc"),
-            "errors": errors, "warnings": warnings}
+            "errors": errors}
 
 
 def check_run_status(path: Path = RUN_STATUS_PATH) -> None:

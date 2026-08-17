@@ -176,21 +176,20 @@ class TestRunStatusSummary(unittest.TestCase):
                                    "validation_warnings_dispositioned": 42,
                                    "blocked": []})
         self.assertEqual(s["state"], "passed")
-        self.assertIn("0 validation errors", s["label"])
-        self.assertIn("42 warnings", s["label"])
-        self.assertIn("42 dispositioned", s["label"])
-        self.assertNotIn("reviewed", s["label"])
+        self.assertEqual(s["label"], "checks passed")
+        self.assertNotIn("warnings", s)
+        self.assertNotIn("dispositioned", s)
         self.assertEqual(s["completed_utc"], "2026-08-17T16:40:48+00:00")
 
-    def test_ok_run_cannot_claim_unrecorded_warning_review(self):
+    def test_ok_run_omits_resolved_warning_counts(self):
         s = db.run_status_summary({"ok": True,
                                    "validation_errors": 0,
                                    "validation_warnings": 42,
                                    "validation_warnings_dispositioned": 41,
                                    "blocked": []})
-        self.assertIn("42 warnings", s["label"])
-        self.assertIn("41 dispositioned", s["label"])
-        self.assertNotIn("reviewed", s["label"])
+        self.assertEqual(s["label"], "checks passed")
+        self.assertNotIn("warnings", s)
+        self.assertNotIn("dispositioned", s)
 
     def test_failed_run_is_failed_with_reasons(self):
         s = db.run_status_summary({"ok": False, "blocked": ["Mgr 2026Q2"],
