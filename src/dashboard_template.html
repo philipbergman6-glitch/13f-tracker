@@ -345,6 +345,12 @@ function chip(action) {
   const s = el("span", "chip " + a.cls, a.glyph + " " + a.label.toUpperCase());
   return s;
 }
+function clsLabel(cls) { return (cls || "").replace(/^COM(?=\s|$)\s*/, "").trim(); }
+function dupNames(rows) {
+  const counts = new Map();
+  rows.forEach(r => { const k = r.ticker || r.issuer; counts.set(k, (counts.get(k) || 0) + 1); });
+  return new Set([...counts].filter(([, n]) => n > 1).map(([k]) => k));
+}
 function deltaSpan(x, suffix) {
   const s = el("span", x >= 0 ? "act-up" : "act-down",
                (x >= 0 ? "▲ " : "▼ ") + signedPct(x) + (suffix || ""));
@@ -587,11 +593,11 @@ function renderTiles(m) {
 
 function renderAumTile(m) {
   const a = m.aum;
-  if (!a.aum_usd) {
+  if (!a.usd) {
     return tile("vs external AUM", "—",
       [document.createTextNode(a.note || "no public figure")]);
   }
-  const ratio = m.stats.value / a.aum_usd * 100;
+  const ratio = m.stats.value / a.usd * 100;
   const t = tile("13F vs " + (a.basis.indexOf("RAUM") >= 0 ? "regulatory AUM (gross)" : a.basis),
     ratio > 200 ? (ratio / 100).toFixed(1) + "×" : fmtPct(ratio), null);
   const meter = el("div", "meter");
@@ -600,7 +606,7 @@ function renderAumTile(m) {
   meter.append(fill);
   t.append(meter);
   const sub = el("div", "tsub");
-  const link = el("a", null, fmtUSD(a.aum_usd));
+  const link = el("a", null, fmtUSD(a.usd));
   link.href = a.source_url; link.target = "_blank"; link.rel = "noopener";
   sub.append(document.createTextNode("of "), link,
     document.createTextNode(" · " + a.basis + ", " + a.as_of));
@@ -615,13 +621,17 @@ function renderTopPositions(m) {
     "main book, top " + m.top_positions.length + " of " + m.stats.n_positions +
     " · " + m.quarter_label));
   const maxW = m.top_positions.length ? m.top_positions[0].weight_pct : 1;
+  const dups = dupNames(m.top_positions);
   m.top_positions.forEach((pos, i) => {
     const row = el("div", "barrow");
     row.tabIndex = 0;
     row.append(el("span", "rank num", String(i + 1)));
     const nm = el("span", "bname");
     nm.append(el("b", null, pos.ticker || pos.issuer));
-    if (pos.ticker) nm.append(el("span", "issuer", pos.issuer));
+    const sub = [pos.ticker ? pos.issuer : null,
+                 dups.has(pos.ticker || pos.issuer) ? clsLabel(pos.cls) : null]
+      .filter(Boolean).join(" · ");
+    if (sub) nm.append(el("span", "issuer", sub));
     row.append(nm);
     const bar = el("span", "bar");
     const fill = el("span", "fill");
@@ -687,12 +697,16 @@ function renderChanges(m) {
   });
   thead.append(hr); t.append(thead);
   const tb = el("tbody");
+  const dups = dupNames(m.changes);
   m.changes.forEach(c => {
     const tr = el("tr");
     const tdA = el("td"); tdA.append(chip(c.action)); tr.append(tdA);
     const tdP = el("td");
     tdP.append(el("b", null, c.ticker || c.issuer));
-    if (c.ticker) tdP.append(el("span", "issuer", c.issuer));
+    const sub = [c.ticker ? c.issuer : null,
+                 dups.has(c.ticker || c.issuer) ? clsLabel(c["class"]) : null]
+      .filter(Boolean).join(" · ");
+    if (sub) tdP.append(el("span", "issuer", sub));
     tr.append(tdP);
     const tdS = el("td", "r");
     tdS.append(document.createTextNode(fmtInt(+c.shares_prev)));
@@ -712,7 +726,8 @@ function renderChanges(m) {
     tr.append(tdW);
     const dw = +c.delta_weight_pp;
     const tdDW = el("td", "r");
-    tdDW.append(el("span", dw >= 0 ? "act-up" : "act-down",
+    if (Math.abs(dw) < 0.005) tdDW.append(el("span", "arrow", "0.00pp"));
+    else tdDW.append(el("span", dw >= 0 ? "act-up" : "act-down",
       (dw >= 0 ? "+" : "") + dw.toFixed(2) + "pp"));
     tr.append(tdDW);
     tr.append(el("td", "r", +c.value_cur_usd ? fmtUSD(+c.value_cur_usd) : "—"));
@@ -736,11 +751,14 @@ function renderHoldings(m) {
     .forEach(([h, cls]) => hr.append(el("th", cls || null, h)));
   const thead = el("thead"); thead.append(hr); t.append(thead);
   const tb = el("tbody");
+  const dups = dupNames(m.holdings);
   m.holdings.forEach((pos, i) => {
     const tr = el("tr");
     tr.append(el("td", null, String(i + 1)));
     tr.append(el("td", null, pos.ticker || "—"));
-    tr.append(el("td", null, pos.issuer));
+    tr.append(el("td", null, pos.issuer +
+      (dups.has(pos.ticker || pos.issuer) && clsLabel(pos.cls)
+        ? " · " + clsLabel(pos.cls) : "")));
     tr.append(el("td", "r", fmtInt(pos.shares)));
     tr.append(el("td", "r", fmtFullUSD(pos.value)));
     tr.append(el("td", "r", pos.weight_pct.toFixed(2) + "%"));
@@ -788,7 +806,7 @@ function renderSources(m) {
     ". Committed tables: data/holdings/" + m.slug + "/" + m.quarter + ".csv" +
     (m.prev_quarter ? ", data/out/changes/" + m.slug + "/" + m.quarter + ".csv" : "") + "."));
   div.append(filings);
-  if (m.aum.aum_usd || m.aum.note) {
+  if (m.aum.usd || m.aum.note) {
     const aum = el("p");
     aum.append(document.createTextNode("External AUM comparator: "));
     if (m.aum.source_url) {

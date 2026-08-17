@@ -13,7 +13,7 @@ from pathlib import Path
 
 from common import HOLDINGS, OUT
 
-CHANGE_COLUMNS = ["cusip", "ticker", "issuer", "action", "shares_prev", "shares_cur",
+CHANGE_COLUMNS = ["cusip", "ticker", "issuer", "class", "action", "shares_prev", "shares_cur",
                   "delta_shares", "pct_change_shares", "weight_prev_pct",
                   "weight_cur_pct", "delta_weight_pp", "value_cur_usd"]
 
@@ -21,7 +21,8 @@ CHANGE_COLUMNS = ["cusip", "ticker", "issuer", "action", "shares_prev", "shares_
 def load_main_book(path: Path) -> dict[str, dict]:
     """Aggregate a holdings CSV to the main book: shares + value by CUSIP."""
     book: dict[str, dict] = defaultdict(lambda: {"shares": 0, "value": 0,
-                                                 "issuer": "", "ticker": ""})
+                                                 "issuer": "", "ticker": "",
+                                                 "cls": ""})
     with open(path, newline="", encoding="utf-8") as fh:
         for row in csv.DictReader(fh):
             if row["sh_prn_type"] != "SH" or row["put_call"]:
@@ -31,6 +32,7 @@ def load_main_book(path: Path) -> dict[str, dict]:
             entry["value"] += int(float(row["value_usd"] or 0))
             entry["issuer"] = entry["issuer"] or row["issuer"]
             entry["ticker"] = entry["ticker"] or row["ticker"]
+            entry["cls"] = entry["cls"] or row["class"]
     return dict(book)
 
 
@@ -62,7 +64,7 @@ def classify(prev: dict[str, dict], cur: dict[str, dict]) -> list[dict]:
         ref = c or p
         changes.append({
             "cusip": cusip, "ticker": ref["ticker"], "issuer": ref["issuer"],
-            "action": action, "shares_prev": sh_p, "shares_cur": sh_c,
+            "class": ref["cls"], "action": action, "shares_prev": sh_p, "shares_cur": sh_c,
             "delta_shares": sh_c - sh_p,
             "pct_change_shares": f"{pct:.1f}" if pct is not None else "",
             "weight_prev_pct": f"{w_p:.2f}", "weight_cur_pct": f"{w_c:.2f}",

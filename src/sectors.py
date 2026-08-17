@@ -16,7 +16,8 @@ from __future__ import annotations
 
 import csv
 import datetime as dt
-import json
+from collections import Counter
+from dataclasses import dataclass
 
 import figi
 from common import RAW, REF, fetch_cached, load_json
@@ -119,151 +120,152 @@ def save_sectors(rows: dict[str, dict]) -> None:
             w.writerow({c: rows[cusip].get(c, "") for c in SECTOR_COLUMNS})
 
 
-def classify_cusip(cusip: str, figi_entry: dict, cik_map: dict[str, int],
-                   today: str) -> dict:
-    ticker = figi.effective_ticker(figi_entry)
-    sec_type = figi_entry.get("security_type", "")
-    row = {"cusip": cusip, "ticker": ticker, "cik": "", "sic": "",
-           "sic_desc": "", "sector": "Unclassified", "method": "unmapped",
-           "retrieved": today}
-    if sec_type in FUND_TYPES:
-        row.update(sector="Funds & ETFs", method="figi_type")
-        return row
-    cik = cik_map.get(normalize_ticker(ticker)) if ticker else None
-    if cik:
-        sic, sic_desc = fetch_sic(cik)
-        row.update(cik=str(cik), sic=sic, sic_desc=sic_desc, method="sec_sic")
-        if sic.isdigit():
-            row["sector"] = sic_to_sector(int(sic))
-    return row
-
-
 def us_ticker_lookup(cusips: list[str]) -> dict[str, str]:
     """Re-query OpenFIGI pinned to US listings for CUSIPs whose cached best
     match was a foreign listing (or none). Returns cusip -> US ticker."""
-    import time
-    import urllib.request
     out: dict[str, str] = {}
-    for i in range(0, len(cusips), figi.JOBS_PER_REQUEST):
-        batch = cusips[i:i + figi.JOBS_PER_REQUEST]
-        jobs = [{"idType": "ID_CUSIP", "idValue": c, "exchCode": "US"}
-                for c in batch]
-        req = urllib.request.Request(
-            figi.MAPPING_URL, data=json.dumps(jobs).encode(),
-            headers={"Content-Type": "application/json"})
-        for attempt in range(4):
-            try:
-                with urllib.request.urlopen(req, timeout=60) as resp:
-                    results = json.loads(resp.read())
-                break
-            except urllib.error.HTTPError as exc:
-                if exc.code == 429 and attempt < 3:
-                    time.sleep(30 * (attempt + 1))
-                else:
-                    raise
-        for cusip, result in zip(batch, results):
-            best = (result.get("data") or [{}])[0]
-            if best.get("ticker"):
-                out[cusip] = best["ticker"]
-        time.sleep(figi.REQUEST_INTERVAL_S)
+    for results in figi.map_batch(cusips, exch_code="US"):
+        for cusip, result in results:
+            ticker = figi.best_match(result).get("ticker")
+            if ticker:
+                out[cusip] = ticker
     return out
 
 
-def repair_unmapped(rows: dict[str, dict], figi_cache: dict[str, dict],
-                    cik_map: dict[str, int], today: str) -> int:
-    """Second pass over method=unmapped rows via the US-listing lookup.
-    Winning tickers are also written to the cusip_ticker.csv override column,
-    so the committed holdings CSVs pick them up on the next pipeline run."""
-    todo = sorted(c for c, r in rows.items() if r["method"] == "unmapped")
-    if not todo:
-        return 0
-    print(f"sectors: retrying {len(todo)} unmapped CUSIPs against US listings "
-          f"(~{len(todo) / figi.JOBS_PER_REQUEST * figi.REQUEST_INTERVAL_S / 60:.0f} min)")
-    found = us_ticker_lookup(todo)
-    n_fixed = 0
-    for cusip, ticker in found.items():
-        cik = cik_map.get(normalize_ticker(ticker))
-        if not cik:
-            continue
-        sic, sic_desc = fetch_sic(cik)
-        rows[cusip].update(ticker=ticker, cik=str(cik), sic=sic,
-                           sic_desc=sic_desc, method="sec_sic_usfigi",
-                           retrieved=today)
-        if sic.isdigit():
-            rows[cusip]["sector"] = sic_to_sector(int(sic))
-        if figi.effective_ticker(figi_cache[cusip]) != ticker:
-            figi_cache[cusip]["override"] = ticker
-        n_fixed += 1
-    for cusip in todo:  # don't re-query known misses on every run
-        if rows[cusip]["method"] == "unmapped":
-            rows[cusip]["method"] = "no_us_listing"
-    figi.save_cache(figi_cache)
-    save_sectors(rows)
-    print(f"sectors: US-listing retry fixed {n_fixed}/{len(todo)}")
-    return n_fixed
+@dataclass
+class SectorRefresh:
+    """One pass over sectors.csv, holding the state every step shares: the
+    sector rows being built, the OpenFIGI ticker cache they classify (and may
+    gain overrides), the EDGAR ticker->CIK map, and the retrieval date stamped
+    on every row written this pass."""
 
+    rows: dict[str, dict]
+    figi_cache: dict[str, dict]
+    cik_map: dict[str, int]
+    today: str
 
-def apply_manual_overrides(rows: dict[str, dict], figi_cache: dict[str, dict],
-                           today: str) -> int:
-    """data/ref/sector_overrides.csv: hand-resolved cusip -> CIK for issuers
-    OpenFIGI cannot map (foreign-domiciled CINS). The SIC/sector still comes
-    from EDGAR, and each row's expect_name is checked against the EDGAR
-    entity name so a mistyped CIK fails loudly instead of misclassifying."""
-    path = REF / "sector_overrides.csv"
-    if not path.exists():
-        return 0
-    n = 0
-    with open(path, newline="", encoding="utf-8") as fh:
-        for ov in csv.DictReader(fh):
-            cusip, cik = ov["cusip"], int(ov["cik"])
-            url = f"https://data.sec.gov/submissions/CIK{cik:010d}.json"
-            data = load_json(fetch_cached(url, RAW / "sectors" / f"CIK{cik:010d}.json"))
-            name = (data.get("name") or "").upper()
-            if ov["expect_name"].upper() not in name:
-                raise SystemExit(
-                    f"sector_overrides.csv: CIK {cik} resolves to {name!r}, "
-                    f"expected it to contain {ov['expect_name']!r} ({cusip})")
-            sic = str(data.get("sic") or "")
-            rows.setdefault(cusip, {"cusip": cusip})
-            rows[cusip].update(
-                ticker=ov["ticker"], cik=str(cik), sic=sic,
-                sic_desc=data.get("sicDescription") or "",
-                sector=sic_to_sector(int(sic)) if sic.isdigit() else "Unclassified",
-                method="manual_cik", retrieved=today)
-            if cusip in figi_cache and \
-                    figi.effective_ticker(figi_cache[cusip]) != ov["ticker"]:
-                figi_cache[cusip]["override"] = ov["ticker"]
-                n += 1
-    figi.save_cache(figi_cache)
-    save_sectors(rows)
-    return n
+    @classmethod
+    def load(cls) -> SectorRefresh:
+        return cls(rows=load_sectors(), figi_cache=figi.load_cache(),
+                   cik_map=load_ticker_cik_map(),
+                   today=dt.date.today().isoformat())
+
+    def save(self) -> None:
+        figi.save_cache(self.figi_cache)
+        save_sectors(self.rows)
+
+    def classify_cusip(self, cusip: str) -> dict:
+        figi_entry = self.figi_cache[cusip]
+        ticker = figi.effective_ticker(figi_entry)
+        sec_type = figi_entry.get("security_type", "")
+        row = {"cusip": cusip, "ticker": ticker, "cik": "", "sic": "",
+               "sic_desc": "", "sector": "Unclassified", "method": "unmapped",
+               "retrieved": self.today}
+        if sec_type in FUND_TYPES:
+            row.update(sector="Funds & ETFs", method="figi_type")
+            return row
+        cik = self.cik_map.get(normalize_ticker(ticker)) if ticker else None
+        if cik:
+            sic, sic_desc = fetch_sic(cik)
+            row.update(cik=str(cik), sic=sic, sic_desc=sic_desc,
+                       method="sec_sic")
+            if sic.isdigit():
+                row["sector"] = sic_to_sector(int(sic))
+        return row
+
+    def classify_missing(self) -> int:
+        """First pass: classify every cached CUSIP with no sectors.csv row."""
+        missing = [c for c in self.figi_cache if c not in self.rows]
+        if not missing:
+            print(f"sectors.csv rows up to date ({len(self.rows)} rows)")
+            return 0
+        print(f"sectors: classifying {len(missing)} CUSIPs "
+              f"({len(self.rows)} already cached)")
+        for i, cusip in enumerate(sorted(missing), 1):
+            self.rows[cusip] = self.classify_cusip(cusip)
+            if i % 100 == 0 or i == len(missing):
+                save_sectors(self.rows)  # checkpoint; reruns resume from the file
+                print(f"  sectors progress: {i}/{len(missing)}")
+        save_sectors(self.rows)
+        return len(missing)
+
+    def repair_unmapped(self) -> int:
+        """Second pass over method=unmapped rows via the US-listing lookup.
+        Winning tickers are also written to the cusip_ticker.csv override
+        column, so the committed holdings CSVs pick them up on the next
+        pipeline run."""
+        todo = sorted(c for c, r in self.rows.items()
+                      if r["method"] == "unmapped")
+        if not todo:
+            return 0
+        print(f"sectors: retrying {len(todo)} unmapped CUSIPs against US listings "
+              f"(~{len(todo) / figi.JOBS_PER_REQUEST * figi.REQUEST_INTERVAL_S / 60:.0f} min)")
+        found = us_ticker_lookup(todo)
+        n_fixed = 0
+        for cusip, ticker in found.items():
+            cik = self.cik_map.get(normalize_ticker(ticker))
+            if not cik:
+                continue
+            sic, sic_desc = fetch_sic(cik)
+            self.rows[cusip].update(ticker=ticker, cik=str(cik), sic=sic,
+                                    sic_desc=sic_desc, method="sec_sic_usfigi",
+                                    retrieved=self.today)
+            if sic.isdigit():
+                self.rows[cusip]["sector"] = sic_to_sector(int(sic))
+            if figi.effective_ticker(self.figi_cache[cusip]) != ticker:
+                self.figi_cache[cusip]["override"] = ticker
+            n_fixed += 1
+        for cusip in todo:  # don't re-query known misses on every run
+            if self.rows[cusip]["method"] == "unmapped":
+                self.rows[cusip]["method"] = "no_us_listing"
+        self.save()
+        print(f"sectors: US-listing retry fixed {n_fixed}/{len(todo)}")
+        return n_fixed
+
+    def apply_manual_overrides(self) -> int:
+        """data/ref/sector_overrides.csv: hand-resolved cusip -> CIK for issuers
+        OpenFIGI cannot map (foreign-domiciled CINS). The SIC/sector still comes
+        from EDGAR, and each row's expect_name is checked against the EDGAR
+        entity name so a mistyped CIK fails loudly instead of misclassifying."""
+        path = REF / "sector_overrides.csv"
+        if not path.exists():
+            return 0
+        n = 0
+        with open(path, newline="", encoding="utf-8") as fh:
+            for ov in csv.DictReader(fh):
+                cusip, cik = ov["cusip"], int(ov["cik"])
+                url = f"https://data.sec.gov/submissions/CIK{cik:010d}.json"
+                data = load_json(
+                    fetch_cached(url, RAW / "sectors" / f"CIK{cik:010d}.json"))
+                name = (data.get("name") or "").upper()
+                if ov["expect_name"].upper() not in name:
+                    raise SystemExit(
+                        f"sector_overrides.csv: CIK {cik} resolves to {name!r}, "
+                        f"expected it to contain {ov['expect_name']!r} ({cusip})")
+                sic = str(data.get("sic") or "")
+                self.rows.setdefault(cusip, {"cusip": cusip})
+                self.rows[cusip].update(
+                    ticker=ov["ticker"], cik=str(cik), sic=sic,
+                    sic_desc=data.get("sicDescription") or "",
+                    sector=sic_to_sector(int(sic)) if sic.isdigit() else "Unclassified",
+                    method="manual_cik", retrieved=self.today)
+                if cusip in self.figi_cache and \
+                        figi.effective_ticker(self.figi_cache[cusip]) != ov["ticker"]:
+                    self.figi_cache[cusip]["override"] = ov["ticker"]
+                    n += 1
+        self.save()
+        return n
 
 
 def refresh() -> dict[str, dict]:
     """Classify every CUSIP in the ticker cache; keep existing rows as cache."""
-    today = dt.date.today().isoformat()
-    figi_cache = figi.load_cache()
-    rows = load_sectors()
-    missing = [c for c in figi_cache if c not in rows]
-    cik_map = load_ticker_cik_map()
-    if not missing:
-        print(f"sectors.csv rows up to date ({len(rows)} rows)")
-        repair_unmapped(rows, figi_cache, cik_map, today)
-        apply_manual_overrides(rows, figi_cache, today)
-        return rows
-    print(f"sectors: classifying {len(missing)} CUSIPs "
-          f"({len(rows)} already cached)")
-    for i, cusip in enumerate(sorted(missing), 1):
-        rows[cusip] = classify_cusip(cusip, figi_cache[cusip], cik_map, today)
-        if i % 100 == 0 or i == len(missing):
-            save_sectors(rows)  # checkpoint; reruns resume from the file
-            print(f"  sectors progress: {i}/{len(missing)}")
-    save_sectors(rows)
-    repair_unmapped(rows, figi_cache, cik_map, today)
-    apply_manual_overrides(rows, figi_cache, today)
-    from collections import Counter
-    print(Counter(r["sector"] for r in rows.values()).most_common())
-    return rows
+    refresh_pass = SectorRefresh.load()
+    n_classified = refresh_pass.classify_missing()
+    refresh_pass.repair_unmapped()
+    refresh_pass.apply_manual_overrides()
+    if n_classified:
+        print(Counter(r["sector"] for r in refresh_pass.rows.values()).most_common())
+    return refresh_pass.rows
 
 
 if __name__ == "__main__":

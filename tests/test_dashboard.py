@@ -192,13 +192,46 @@ class TestTakeaways(unittest.TestCase):
 
 
 class TestQuarterSelection(unittest.TestCase):
-    def test_common_quarter_is_latest_majority(self):
+    def test_as_of_quarter_is_latest_majority(self):
         latest = {"a": "2026Q1", "b": "2026Q1", "c": "2026Q2"}
-        self.assertEqual(db.common_quarter(latest), "2026Q1")
+        self.assertEqual(db.as_of_quarter(latest), "2026Q1")
 
     def test_unanimous(self):
         latest = {"a": "2026Q2", "b": "2026Q2"}
-        self.assertEqual(db.common_quarter(latest), "2026Q2")
+        self.assertEqual(db.as_of_quarter(latest), "2026Q2")
+
+
+class TestPinnedQuarter(unittest.TestCase):
+    """--quarter pins the as-of date: no card may show a book from after it.
+
+    Uses the committed holdings CSVs. situational-awareness is first tracked in
+    2024Q4, so a 2024Q3 pin leaves it with no book as of that date.
+    """
+    PIN = "2024Q3"
+
+    @classmethod
+    def setUpClass(cls):
+        cls.payload = db.build_payload(cls.PIN)
+
+    def test_no_manager_shown_later_than_the_pin(self):
+        later = {m["manager"]: m["quarter"] for m in self.payload["managers"]
+                 if m["quarter"] > self.PIN}
+        self.assertEqual(later, {})
+
+    def test_manager_with_no_book_as_of_the_pin_is_omitted(self):
+        shown = {m["manager"] for m in self.payload["managers"]}
+        self.assertNotIn("Situational Awareness", shown)
+
+    def test_consensus_pools_only_changes_from_at_or_before_the_pin(self):
+        """A consensus row must not count a change filed after the as-of date."""
+        quarter_of = {m["manager"]: m["quarter"] for m in self.payload["managers"]}
+        credited = {a["manager"]
+                    for side in self.payload["consensus"].values()
+                    for row in side for a in row["managers"]}
+        from_after_pin = {m: quarter_of.get(m) for m in credited
+                          if quarter_of.get(m, self.PIN) > self.PIN}
+        self.assertEqual(from_after_pin, {})
+        self.assertEqual(credited - set(quarter_of), set())
 
 
 if __name__ == "__main__":
