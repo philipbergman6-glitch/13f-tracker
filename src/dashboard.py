@@ -140,28 +140,51 @@ def _change_counts_phrase(changes: list[dict]) -> str:
     return parts[0] if parts else ""
 
 
-def _biggest_move_sentence(changes: list[dict]) -> str:
-    news = [c for c in changes if c["action"] == "new"]
-    adds = [c for c in changes if c["action"] == "add"]
-    exits = [c for c in changes if c["action"] == "exit"]
+def move_magnitude_usd(c: dict, value_prev: float | None) -> float:
+    """Economic size of a change, in dollars — what 'largest move' ranks by.
+
+    new: the position's current value. exit: its prior-quarter value (prev
+    weight x prev book value). add/trim: |share delta| x current implied
+    price, so a price rally alone never counts as a move.
+    """
+    action = c["action"]
+    value_cur = float(c["value_cur_usd"] or 0)
+    if action == "new":
+        return value_cur
+    if action == "exit":
+        if not value_prev:
+            return 0.0
+        return float(c["weight_prev_pct"] or 0) / 100 * value_prev
+    shares_cur = float(c["shares_cur"] or 0)
+    price = value_cur / shares_cur if shares_cur else 0.0
+    return abs(float(c["delta_shares"] or 0)) * price
+
+
+def _biggest_move_sentence(changes: list[dict],
+                           value_prev: float | None) -> str:
+    big = max(changes, key=lambda c: move_magnitude_usd(c, value_prev))
+    mag = move_magnitude_usd(big, value_prev)
+    name = big["ticker"] or big["issuer"]
     tail = f" — {_change_counts_phrase(changes)} in all" \
         if len(changes) > 1 else ""
-    if news:
-        big = max(news, key=lambda c: int(float(c["value_cur_usd"] or 0)))
-        name = big["ticker"] or big["issuer"]
-        return (f"The quarter's largest move was a new "
-                f"{fmt_usd(int(float(big['value_cur_usd'] or 0)))} position in "
-                f"{name}{tail}.")
-    if adds:
-        big = max(adds, key=lambda c: abs(float(c["delta_weight_pp"] or 0)))
-        name = big["ticker"] or big["issuer"]
-        return (f"The quarter's largest move was adding to {name} "
+    action = big["action"]
+    if action == "new":
+        return (f"The quarter's largest move was a new {fmt_usd(mag)} "
+                f"position in {name}{tail}.")
+    if action == "add":
+        return (f"The quarter's largest move was adding an estimated "
+                f"{fmt_usd(mag)} to {name} "
                 f"({float(big['delta_weight_pp']):+.1f}pp of book weight)"
                 f"{tail}.")
-    big = exits[0] if exits else changes[0]
-    name = big["ticker"] or big["issuer"]
-    verb = "exiting" if big["action"] == "exit" else "trimming"
-    return f"The quarter's largest move was {verb} {name}{tail}."
+    if action == "exit":
+        if mag:
+            return (f"The quarter's largest move was exiting {name}, a "
+                    f"{fmt_usd(mag)} position last quarter{tail}.")
+        return f"The quarter's largest move was exiting {name}{tail}."
+    if mag:
+        return (f"The quarter's largest move was trimming {name} by an "
+                f"estimated {fmt_usd(mag)}{tail}.")
+    return f"The quarter's largest move was trimming {name}{tail}."
 
 
 def takeaways(name: str, qkey: str, prev_qkey: str | None, stats: dict,
@@ -180,7 +203,7 @@ def takeaways(name: str, qkey: str, prev_qkey: str | None, stats: dict,
             f"main book across {stats['n_positions']} positions — its first "
             f"tracked quarter.")
     if changes:
-        out.append(_biggest_move_sentence(changes))
+        out.append(_biggest_move_sentence(changes, stats["value_prev"]))
     elif prev_qkey:
         out.append(f"No significant changes versus {qlabel(prev_qkey)}.")
     if mix:
@@ -299,8 +322,11 @@ def build_payload(quarter: str | None = None) -> dict:
             latest[slug] = files[-1].stem
     as_of = quarter or as_of_quarter(latest)
 
+    now = dt.datetime.now(dt.timezone.utc)
     payload = {"as_of": as_of, "as_of_label": qlabel(as_of),
-               "generated": dt.date.today().isoformat(),
+               "generated": now.date().isoformat(),
+               "generated_utc": now.strftime("%Y-%m-%d %H:%M UTC"),
+               "run_status": run_status_summary(load_run_status()),
                "managers": [], "consensus": None}
     changes_by_manager = {}
 
@@ -373,6 +399,37 @@ def render(payload: dict) -> str:
 
 
 RUN_STATUS_PATH = OUT / "run_status.json"
+
+
+def load_run_status(path: Path = RUN_STATUS_PATH) -> dict | None:
+    if not path.exists():
+        return None
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
+def run_status_summary(run: dict | None) -> dict:
+    """The header status indicator's data: derived from run_status.json,
+    never hardcoded. state is passed/failed/unknown per the actual gates."""
+    if run is None:
+        return {"state": "unknown",
+                "label": "no gated pipeline run on record",
+                "completed_utc": None, "errors": None, "warnings": None}
+    errors = int(run.get("validation_errors") or 0)
+    warnings = int(run.get("validation_warnings") or 0)
+    blocked = run.get("blocked") or []
+    if run.get("ok"):
+        return {"state": "passed",
+                "label": (f"checks passed · {errors} validation errors · "
+                          f"{warnings} warnings (reviewed)"),
+                "completed_utc": run.get("completed_utc"),
+                "errors": errors, "warnings": warnings}
+    parts = ([f"{len(blocked)} manager-quarter(s) blocked"] if blocked else []) \
+        + ([f"{errors} validation errors"] if errors else [])
+    return {"state": "failed",
+            "label": "checks FAILED — " + (", ".join(parts)
+                                           or "see data/out/run_status.json"),
+            "completed_utc": run.get("completed_utc"),
+            "errors": errors, "warnings": warnings}
 
 
 def check_run_status(path: Path = RUN_STATUS_PATH) -> None:

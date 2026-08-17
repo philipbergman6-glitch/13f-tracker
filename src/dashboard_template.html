@@ -93,7 +93,7 @@ header.site {
 }
 .site-inner {
   max-width: 1180px; margin: 0 auto; padding: 14px 28px;
-  display: flex; align-items: baseline; gap: 14px;
+  display: flex; align-items: baseline; gap: 6px 14px; flex-wrap: wrap;
 }
 .masthead {
   font-family: "Newsreader", Georgia, serif;
@@ -110,6 +110,24 @@ header.site {
   padding: 3px 10px; cursor: pointer;
 }
 #themeBtn:hover { background: var(--wash); }
+
+/* ---- run-status strip ---- */
+.statusbar { border-top: 1px solid var(--hairline); background: var(--surface); }
+.status-inner {
+  max-width: 1180px; margin: 0 auto; padding: 6px 28px;
+  display: flex; flex-wrap: wrap; gap: 2px 20px;
+  font-size: 12px; color: var(--ink-2);
+}
+.status-item { white-space: nowrap; }
+.status-item.wrapok { white-space: normal; }
+.status-item b { font-weight: 600; }
+.status-dot {
+  display: inline-block; width: 8px; height: 8px; border-radius: 50%;
+  margin-right: 6px; vertical-align: 1px; background: var(--muted);
+}
+.status-pass .status-dot { background: var(--up); }
+.status-fail .status-dot { background: var(--down); }
+.status-fail { color: var(--down); font-weight: 600; }
 
 .wrap { max-width: 1180px; margin: 0 auto; padding: 30px 28px 64px; }
 .report { max-width: 980px; }
@@ -291,6 +309,31 @@ footer.site {
 #tip .tt-title { font-weight: 640; margin-bottom: 3px; }
 #tip .tt-row { display: flex; justify-content: space-between; gap: 16px; color: var(--ink-2); }
 #tip .tt-row b { color: var(--ink); font-weight: 600; }
+
+/* ---- small screens ---- */
+@media (max-width: 640px) {
+  .site-inner { padding: 12px 16px; }
+  .status-inner { padding: 6px 16px; }
+  .wrap { padding: 22px 16px 48px; }
+  .foot-inner { padding: 22px 16px 30px; }
+  .lead { gap: 14px 24px; margin-bottom: 30px; }
+  .lead-text h1 { font-size: 30px; }
+  .lead-hero { margin-left: 0; text-align: left; }
+  .lead-hero .heroval { font-size: 38px; }
+  .mhead h1 { font-size: 30px; }
+  .takeaways { font-size: 17px; }
+  .tiles { gap: 10px; }
+  .tile.hero { grid-column: 1 / -1; }
+  .tile .tval { font-size: 22px; }
+  .tile.hero .tval { font-size: 30px; }
+  .barrow {
+    grid-template-columns: 16px minmax(84px, 45%) 1fr 68px 44px;
+    gap: 7px;
+  }
+  .sector .barrow { grid-template-columns: minmax(96px, 50%) 1fr 68px 44px; }
+  .barrow .bname { font-size: 12.5px; }
+  .listpanel, .tablepanel, .consensus-panel { padding-left: 14px; padding-right: 14px; }
+}
 </style>
 </head>
 <body>
@@ -301,6 +344,7 @@ footer.site {
     <span class="site-spacer"></span>
     <button id="themeBtn" type="button" aria-label="cycle color theme">Theme: Auto</button>
   </div>
+  <div class="statusbar"><div class="status-inner" id="statusbar"></div></div>
 </header>
 <main id="app" class="wrap"></main>
 <footer class="site"><div class="foot-inner" id="foot"></div></footer>
@@ -372,12 +416,19 @@ function bindTip(node, buildRows) {
   node.addEventListener("pointerenter", show);
   node.addEventListener("pointermove", move);
   node.addEventListener("pointerleave", () => { tip.style.display = "none"; });
+  // touch: a tap (no hover) toggles the tip; tapping elsewhere hides it
+  node.addEventListener("click", ev => {
+    if (tip.style.display !== "block") show(ev);
+  });
   node.addEventListener("focus", ev => {
     const r = node.getBoundingClientRect();
     show({clientX: r.left + 40, clientY: r.bottom});
   });
   node.addEventListener("blur", () => { tip.style.display = "none"; });
 }
+document.addEventListener("pointerdown", ev => {
+  if (!ev.target.closest(".barrow")) tip.style.display = "none";
+});
 function ttRow(label, value) {
   const r = el("div", "tt-row"); r.append(el("span", null, label));
   const b = el("b", null, value); r.append(b); return r;
@@ -411,7 +462,9 @@ function renderLanding() {
   const hero = el("div", "lead-hero");
   hero.append(el("div", "heroval num", fmtUSD(DATA.combined_value)));
   hero.append(el("div", "herolabel",
-    "combined main-book value · " + DATA.managers.length + " managers · " + DATA.as_of_label));
+    "sum of reported 13F long values · " + DATA.managers.length + " managers · " + DATA.as_of_label));
+  hero.append(el("div", "herolabel",
+    "overlapping across books — not firm AUM, not investable capital"));
   lead.append(lt, hero);
   const consensus = renderConsensus();
   const cardsSec = el("section");
@@ -449,8 +502,10 @@ function consensusPanel(side, title, defn) {
       " by three or more managers this quarter."));
     return p;
   }
+  const CONS_MAX = 6;
+  const shown = rows.slice(0, CONS_MAX);
   const t = el("table", "cons");
-  rows.forEach(r => {
+  shown.forEach(r => {
     const tr = el("tr");
     const td1 = el("td");
     td1.append(el("div", "tick", r.ticker || "(no ticker)"));
@@ -471,6 +526,12 @@ function consensusPanel(side, title, defn) {
     t.append(tr);
   });
   p.append(t);
+  if (rows.length > shown.length) {
+    p.append(el("div", "consensus-empty",
+      "+ " + (rows.length - shown.length) + " more consensus name" +
+      (rows.length - shown.length === 1 ? "" : "s") +
+      " not shown — each appears in its managers' change tables."));
+  }
   return p;
 }
 
@@ -823,6 +884,24 @@ function renderSources(m) {
   return div;
 }
 
+/* ---------- run-status strip ---------- */
+function renderStatusBar() {
+  const bar = document.getElementById("statusbar");
+  const st = DATA.run_status;
+  const cls = {passed: "status-pass", failed: "status-fail"}[st.state] || "status-unknown";
+  const check = el("span", "status-item wrapok " + cls);
+  check.append(el("span", "status-dot"));
+  check.append(document.createTextNode(st.label +
+    (st.completed_utc ? " · pipeline run " + st.completed_utc.replace("T", " ").replace("+00:00", " UTC") : "")));
+  const through = el("span", "status-item");
+  through.append(document.createTextNode("Data through "));
+  through.append(el("b", null, DATA.as_of_label));
+  bar.replaceChildren(
+    through,
+    el("span", "status-item", "Generated " + DATA.generated_utc),
+    check);
+}
+
 /* ---------- footer ---------- */
 function renderFooter() {
   const f = document.getElementById("foot");
@@ -837,6 +916,9 @@ function renderFooter() {
     "Sectors: issuer SIC code from SEC EDGAR company submissions, rolled up to GICS-style groups by a committed mapping (data/ref/sectors.csv). SIC is registration-based and approximate — e.g. some internet platforms classify under Information Technology.",
     "External AUM: Form ADV regulatory AUM (gross — can exceed net AUM for levered funds) where available; Berkshire uses 10-Q equity-securities fair value; Icahn uses IEP indicative NAV; see each manager page for the exact source.",
     "13F scope: US-listed long equity and options only. Short books, non-US listings, cash and private holdings are not disclosed and are not shown here.",
+    "Combined total on the landing page: the sum of the 20 reported main books. It overlaps where managers run related books and is neither firm AUM nor investable capital.",
+    "Quarter-over-quarter deltas are changes in reported 13F value — not performance and not net flows.",
+    "The 'largest move' in each manager's takeaway is the change with the biggest dollar magnitude: current value for new buys, prior-quarter value for exits, and |share change| × implied price (an estimate) for adds and trims.",
   ].forEach(s => ul.append(el("li", null, s)));
   c1.append(ul);
   const c2 = el("div");
@@ -851,12 +933,16 @@ function renderFooter() {
   c2.append(p1);
   c2.append(el("p", null,
     "As-of quarter: " + DATA.as_of_label + " — the latest quarter with quarter-final filings across the manager list. " +
-    "Q2 2026 filings (due 2026-08-14) enter after the post-deadline re-pull."));
+    "A manager whose " + DATA.as_of_label + " book is not yet final shows its most recent earlier quarter, labelled on its card."));
+  const st = DATA.run_status;
+  c2.append(el("p", null,
+    "Release gate: every build reads data/out/run_status.json; a failed pipeline run blocks regeneration. This build: " +
+    st.label + (st.completed_utc ? " (pipeline run completed " + st.completed_utc.replace("T", " ").replace("+00:00", " UTC") + ")" : "") + "."));
   c2.append(el("p", null,
     "Tickers via OpenFIGI (committed cache with manual overrides). Positions with no US listing may show no ticker; they remain in every total."));
   c2.append(el("div", "gen",
-    "Generated " + DATA.generated + " · python src/dashboard.py · " +
-    "regenerate after each quarterly pipeline run · GEMS internal research — not investment advice."));
+    "Generated " + DATA.generated_utc + " · python src/dashboard.py · " +
+    "GEMS internal research — not investment advice."));
   cols.append(c1, c2);
   f.replaceChildren(cols);
 }
@@ -872,6 +958,7 @@ function route() {
 document.getElementById("siteQuarter").textContent =
   DATA.as_of_label + " · " + DATA.managers.length + " managers";
 window.addEventListener("hashchange", route);
+renderStatusBar();
 renderFooter();
 route();
 </script>

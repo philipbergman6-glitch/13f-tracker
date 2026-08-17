@@ -107,11 +107,94 @@ class TestSectorMix(unittest.TestCase):
         self.assertAlmostEqual(sum(m["weight_pct"] for m in mix), 100.0, places=6)
 
 
-def chg(ticker, action, value=0, issuer=None, delta_weight=1.0):
+def chg(ticker, action, value=0, issuer=None, delta_weight=1.0,
+        shares_prev=0, shares_cur=1, weight_prev=0.0):
     return {"cusip": ticker, "ticker": ticker, "issuer": issuer or ticker,
             "action": action, "value_cur_usd": str(value),
             "delta_weight_pp": f"{delta_weight:.2f}",
-            "pct_change_shares": "", "shares_prev": "0", "shares_cur": "1"}
+            "pct_change_shares": "",
+            "shares_prev": str(shares_prev), "shares_cur": str(shares_cur),
+            "delta_shares": str(shares_cur - shares_prev),
+            "weight_prev_pct": f"{weight_prev:.2f}"}
+
+
+class TestMoveMagnitude(unittest.TestCase):
+    """'Largest move' ranks by dollar magnitude of the position change."""
+
+    def test_new_is_current_value(self):
+        c = chg("NVDA", "new", 1_200_000_000)
+        self.assertEqual(db.move_magnitude_usd(c, 30e9), 1_200_000_000)
+
+    def test_exit_is_prior_quarter_value(self):
+        c = chg("XOM", "exit", 0, shares_prev=100, shares_cur=0, weight_prev=5.0)
+        self.assertAlmostEqual(db.move_magnitude_usd(c, 40e9), 2e9)
+        self.assertEqual(db.move_magnitude_usd(c, None), 0.0)
+
+    def test_add_trim_is_share_delta_times_implied_price(self):
+        # 1m shares added at an implied $100 -> $100m, regardless of pct move
+        c = chg("MSFT", "add", value=400_000_000,
+                shares_prev=3_000_000, shares_cur=4_000_000)
+        self.assertAlmostEqual(db.move_magnitude_usd(c, 30e9), 100_000_000)
+        t = chg("MSFT", "trim", value=200_000_000,
+                shares_prev=4_000_000, shares_cur=2_000_000)
+        self.assertAlmostEqual(db.move_magnitude_usd(t, 30e9), 200_000_000)
+
+    def test_tiny_new_position_does_not_headline_over_billion_dollar_add(self):
+        changes = [
+            chg("TINY", "new", 5_000_000),
+            chg("META", "add", value=6_000_000_000,
+                shares_prev=5_000_000, shares_cur=10_000_000, delta_weight=4.2),
+        ]
+        s = db._biggest_move_sentence(changes, 50e9)
+        self.assertIn("META", s)
+        self.assertNotIn("TINY", s)
+        self.assertIn("$3bn", s)  # 5m shares x $600 implied
+
+    def test_tiny_new_position_does_not_headline_over_large_exit(self):
+        changes = [
+            chg("TINY", "new", 5_000_000),
+            chg("BIG", "exit", 0, shares_prev=1_000_000, shares_cur=0,
+                weight_prev=10.0),
+        ]
+        s = db._biggest_move_sentence(changes, 40e9)
+        self.assertIn("exiting BIG", s)
+        self.assertIn("$4bn", s)
+
+    def test_largest_new_still_headlines_when_biggest(self):
+        changes = [chg("NVDA", "new", 2_000_000_000),
+                   chg("SMALL", "trim", value=1_000_000,
+                       shares_prev=200, shares_cur=100)]
+        s = db._biggest_move_sentence(changes, 30e9)
+        self.assertIn("new $2bn position in NVDA", s)
+
+
+class TestRunStatusSummary(unittest.TestCase):
+    def test_ok_run_is_passed_with_counts(self):
+        s = db.run_status_summary({"ok": True, "completed_utc": "2026-08-17T16:40:48+00:00",
+                                   "validation_errors": 0, "validation_warnings": 42,
+                                   "blocked": []})
+        self.assertEqual(s["state"], "passed")
+        self.assertIn("0 validation errors", s["label"])
+        self.assertIn("42 warnings", s["label"])
+        self.assertEqual(s["completed_utc"], "2026-08-17T16:40:48+00:00")
+
+    def test_failed_run_is_failed_with_reasons(self):
+        s = db.run_status_summary({"ok": False, "blocked": ["Mgr 2026Q2"],
+                                   "validation_errors": 3})
+        self.assertEqual(s["state"], "failed")
+        self.assertIn("FAILED", s["label"])
+        self.assertIn("1 manager-quarter(s) blocked", s["label"])
+        self.assertIn("3 validation errors", s["label"])
+
+    def test_missing_run_is_unknown(self):
+        s = db.run_status_summary(None)
+        self.assertEqual(s["state"], "unknown")
+
+    def test_payload_carries_run_status_and_generated_utc(self):
+        payload = db.build_payload("2024Q3")
+        self.assertIn(payload["run_status"]["state"],
+                      {"passed", "failed", "unknown"})
+        self.assertIn("UTC", payload["generated_utc"])
 
 
 class TestConsensus(unittest.TestCase):
