@@ -1,0 +1,36 @@
+{
+  "release_quarter": "2026Q2",
+  "generated_utc": "2026-08-17T16:41:58+00:00",
+  "source_commit": "37d8a0bf3a66855175cbc9826c6cb1457f3b39fd",
+  "source_commit_date": "2026-08-17T19:41:57+03:00",
+  "uncommitted_changes_at_generation": [
+    "?? .scratch/",
+    "?? docs/evidence/"
+  ],
+  "pipeline_run": {
+    "ok": true,
+    "completed_utc": "2026-08-17T16:40:48+00:00",
+    "window": [
+      "2024Q2",
+      "2026Q2"
+    ],
+    "force_refresh": false,
+    "blocked": [],
+    "validation_errors": 0,
+    "validation_warnings": 42,
+    "same_day_filings": []
+  },
+  "n_filings": 201,
+  "n_checksummed_files": 349,
+  "package_files": [
+    "checksums.csv",
+    "exceptions.csv",
+    "filer_status.csv",
+    "filings.csv",
+    "flags.csv",
+    "merge_decisions.csv",
+    "test_results.json",
+    "validation.csv",
+    "report.md"
+  ]
+}

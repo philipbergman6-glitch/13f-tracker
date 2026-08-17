@@ -56,6 +56,29 @@ Pipeline changes feeding it (all consolidation, no re-derivation):
    Situational Awareness 2025Q4 ($1), TCI 2025Q3 ($1).
 6. Re-running evidence.py archives the previous package before rewriting.
 
-## Verification
+## Verification (2026-08-17)
 
-(filled in after implementation — see bottom of file)
+1. Test suite: **111/111 passing** (`python3 -m unittest discover -s tests`;
+   89 pre-existing + 22 new merge-decision / verification / evidence tests).
+2. Full run `--start 2024Q2 --end 2026Q2 --skip-figi`: exit 0, 200 filings,
+   178 CSVs; `git status data/holdings` clean — committed holdings CSVs and
+   `filer_status.csv` byte-identical. Cover-page check now reports rows
+   199/1 and value totals 3 mismatches.
+3. `python3 src/evidence.py --quarter 2026Q2` → `docs/evidence/2026Q2/`
+   (10 files); report.md carries the item→file checklist for all 10 required
+   items, a reproduce section pinned to the source commit, and a blank
+   reviewer sign-off. 201 filings in filings.csv (200 parsed HR + 1 NT), 349
+   checksummed source files + dashboard SHA-256.
+4. Reconciliation mismatches are exactly the three expected —
+   Lindsell Train 2025Q1 (rows 29/28, value $3,614,010,966/$4,000,701,335),
+   Situational Awareness 2025Q4 (−$1), TCI 2025Q3 (+$1) — each annotated
+   with its EXC id; removing an exception row makes evidence.py exit with
+   the mismatch details (covered by tests/test_evidence.py).
+5. Hard-fail gates unit-tested: failed/missing run, missing merge decision,
+   unmapped CIK, missing status row, status accession absent from the
+   verification table, mismatch without exception.
+6. Superseding verified live: regenerating archived the prior draft to
+   `docs/evidence/_archive/2026Q2/20260817T164158Z/` before rewriting.
+   Archives of never-committed drafts stay on disk untracked; an archive of
+   a previously committed package should be committed alongside its
+   replacement.
