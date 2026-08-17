@@ -1,14 +1,22 @@
 {
   "release_quarter": "2026Q2",
-  "generated_utc": "2026-08-17T18:58:14+00:00",
-  "source_commit": "4351b912661becb44096f29b0b6cbc0c3c61c5a6",
-  "source_commit_date": "2026-08-17T21:57:54+03:00",
+  "generated_utc": "2026-08-17T18:41:34+00:00",
+  "source_commit": "c66d14d4dc8661fecfe5243e17bd988e8dc4228e",
+  "source_commit_date": "2026-08-17T21:41:10+03:00",
   "uncommitted_changes_at_generation": [
-    "?? .scratch/"
+    "M docs/evidence/2026Q2/checksums.csv",
+    " M docs/evidence/2026Q2/exceptions.csv",
+    " M docs/evidence/2026Q2/manifest.json",
+    " M docs/evidence/2026Q2/report.md",
+    " M docs/evidence/2026Q2/test_results.json",
+    "?? .scratch/",
+    "?? docs/evidence/2026Q2/warning_dispositions.csv",
+    "?? docs/evidence/_archive/2026Q2/20260817T182147Z/",
+    "?? docs/evidence/_archive/2026Q2/20260817T182349Z/"
   ],
   "pipeline_run": {
     "ok": true,
-    "completed_utc": "2026-08-17T18:58:11+00:00",
+    "completed_utc": "2026-08-17T18:41:31+00:00",
     "window": [
       "2024Q2",
       "2026Q2"
