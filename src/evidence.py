@@ -8,8 +8,9 @@ another analyst reproduce the dashboard and explain every displayed number.
 Nothing is re-derived here: every figure is copied from the run that produced
 it and tied to that run via manifest.json.
 
-Usage (release order: pipeline.py --force-refresh -> dashboard.py -> evidence.py):
-    python src/evidence.py [--quarter 2026Q2]
+Usage (normally invoked by src/release.py stage, which points --dashboard at
+the staging build; see docs/release-runbook.md):
+    python src/evidence.py [--quarter 2026Q2] [--dashboard dashboard/staging/index.html]
 
 Hard-fails (SystemExit) over a failed or missing pipeline run, a failing test
 suite, a missing dashboard or one whose as-of quarter is not the release
@@ -45,6 +46,14 @@ FILINGS_COLUMNS = [
     "filing_date", "report_date", "retrieved_date", "role", "rows_parsed",
     "table_entry_total", "rows_match", "value_parsed_usd", "table_value_total",
     "value_match", "exception_id", "filing_url",
+]
+
+# Blank sign-off block written into every report; release.py's publish gate
+# parses these exact lines, so keep field labels in sync with its regexes.
+SIGN_OFF_LINES = [
+    "- Reviewer name: ______________________",
+    "- Review date (YYYY-MM-DD): ______________________",
+    "- Decision (approve / reject, with notes): ______________________",
 ]
 
 # Required-item checklist: (report section, package file) per Phase 3 item.
@@ -265,13 +274,13 @@ def checksum_targets() -> list[Path]:
     return targets
 
 
-def dashboard_as_of() -> str:
-    if not DASHBOARD_HTML.exists():
-        fail(f"{DASHBOARD_HTML} missing — run src/dashboard.py first")
-    m = re.search(r'"as_of":"(\d{4}Q\d)"',
-                  DASHBOARD_HTML.read_text(encoding="utf-8"))
+def dashboard_as_of(path: Path | None = None) -> str:
+    path = path if path is not None else DASHBOARD_HTML
+    if not path.exists():
+        fail(f"{path} missing — run src/dashboard.py first")
+    m = re.search(r'"as_of":"(\d{4}Q\d)"', path.read_text(encoding="utf-8"))
     if not m:
-        fail(f"could not find the as-of quarter in {DASHBOARD_HTML}")
+        fail(f"could not find the as-of quarter in {path}")
     return m.group(1)
 
 
@@ -323,6 +332,7 @@ def render_report(qkey: str, run: dict, filings: list[dict],
     for v in validation:
         val_counts[v["level"]] += 1
     dirty = git["dirty_files"]
+    dash_rel = str(DASHBOARD_HTML.relative_to(REPO)).replace("\\", "/")
 
     lines = [
         f"# Evidence package — {qkey} release",
@@ -436,24 +446,27 @@ def render_report(qkey: str, run: dict, filings: list[dict],
         "",
         "## 8. Checksums and versions",
         "",
-        f"`checksums.csv` holds SHA-256 digests for the published dashboard "
-        f"and all {len(checksums) - 1} source data files it derives from "
-        f"(holdings CSVs, filer statuses, reference tables, change tables, "
-        f"run gate outputs). Source code version: commit `{git['commit']}` "
-        f"({git['commit_date']}).",
+        f"`checksums.csv` holds SHA-256 digests for the release dashboard "
+        f"build and all {len(checksums) - 1} source data files it derives "
+        f"from (holdings CSVs, filer statuses, reference tables, change "
+        f"tables, run gate outputs). At publication, release.py re-verifies "
+        f"every digest against the artifacts being published. Source code "
+        f"version: commit `{git['commit']}` ({git['commit_date']}).",
         "",
-        f"- `dashboard/index.html` — SHA-256 "
-        f"`{checksums['dashboard/index.html']}`",
+        f"- `{dash_rel}` — SHA-256 `{checksums[dash_rel]}`",
         "",
         "## 9. How to reproduce this release",
         "",
         "```",
         f"git checkout {git['commit']}",
-        f"python src/pipeline.py --start {window[0]} --end {window[1]} "
-        f"--force-refresh   # add --skip-figi to reuse the committed ticker cache",
-        f"python src/dashboard.py --quarter {qkey}",
-        f"python src/evidence.py --quarter {qkey}",
+        f"python src/release.py stage --quarter {qkey} "
+        f"--start {window[0]} --end {window[1]}",
         "```",
+        "",
+        "`stage` wraps, in order: `pipeline.py --force-refresh`, the full "
+        "test suite, `dashboard.py --out dashboard/staging/index.html`, and "
+        "this package's generation (add `--skip-figi` to reuse the committed "
+        "ticker cache).",
         "",
         "Raw EDGAR responses cache under `data/raw/` (re-fetchable; superseded "
         "mutable indexes are archived, not overwritten). Re-running against "
@@ -464,11 +477,13 @@ def render_report(qkey: str, run: dict, filings: list[dict],
         "## Reviewer sign-off",
         "",
         "Completed by a human reviewer before the release is considered "
-        "approved; the signed copy is committed in place.",
+        "approved: replace each blank below, commit this file, then run "
+        f"`python src/release.py publish --quarter {qkey}`. The publish gate "
+        "blocks unless the decision line begins with `approve` and the "
+        "signed report is committed; regenerating this package rewrites the "
+        "block blank, so a stale approval can never carry over.",
         "",
-        "- Reviewer name: ______________________",
-        "- Review date: ______________________",
-        "- Decision (approve / reject, with notes): ______________________",
+        *SIGN_OFF_LINES,
         "",
     ]
     return "\n".join(lines)
@@ -485,7 +500,7 @@ def build_package(qkey: str) -> Path:
              f"{window_q[0]}–{window_q[1]}")
     as_of = dashboard_as_of()
     if as_of != qkey:
-        fail(f"dashboard/index.html is as of {as_of}, not {qkey} — rebuild it "
+        fail(f"{DASHBOARD_HTML} is as of {as_of}, not {qkey} — rebuild it "
              f"with `python src/dashboard.py --quarter {qkey}` first")
 
     spans = load_manager_map()
@@ -556,11 +571,18 @@ def build_package(qkey: str) -> Path:
 
 
 def main() -> None:
+    global DASHBOARD_HTML
     ap = argparse.ArgumentParser()
     ap.add_argument("--quarter", default=None,
                     help="release quarter, e.g. 2026Q2 (default: the "
                          "dashboard's as-of quarter)")
+    ap.add_argument("--dashboard", default=None,
+                    help="dashboard HTML this package evidences (default "
+                         "dashboard/index.html; release.py passes the "
+                         "staging build)")
     args = ap.parse_args()
+    if args.dashboard:
+        DASHBOARD_HTML = Path(args.dashboard).resolve()
     qkey = args.quarter or dashboard_as_of()
     pkg_dir = build_package(qkey)
     files = sorted(p.name for p in pkg_dir.iterdir())

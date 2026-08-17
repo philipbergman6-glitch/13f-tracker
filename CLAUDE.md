@@ -13,7 +13,12 @@ watchlists. Terminology in CONTEXT.md; decisions in `.scratch\13f-tracker\` (way
 - Superseded files are archived, not deleted (firm-wide rule).
 
 ## Layout
-- `src\` — code (`pipeline.py` is the entry point)
+- `src\` — code (`pipeline.py` is the entry point; quarterly publication goes
+  through `release.py` — stage → human sign-off → publish, see
+  `docs\release-runbook.md`)
+- `dashboard\index.html` — the published dashboard (promoted from
+  `dashboard\staging\`, gitignored); prior releases in `dashboard\_archive\`;
+  release log in `docs\releases.csv`
 - `data\raw\` — untouched source data (gitignored)
 - `data\out\` — generated outputs incl. change tables + verification (gitignored)
 - `data\holdings\<manager>\<YYYYQn>.csv` — committed quarter-final holdings
