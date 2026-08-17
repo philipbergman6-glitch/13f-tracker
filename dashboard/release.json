@@ -1,0 +1,15 @@
+{
+  "published_utc": "2026-08-17T17:16:42+00:00",
+  "action": "publish",
+  "quarter": "2026Q2",
+  "pipeline_run_utc": "2026-08-17T17:12:06+00:00",
+  "source_commit": "c14b08e1ec7ea8fde5bf439d55c67ce9797e7673",
+  "dashboard_sha256": "9023de90e406bd604155814de2ed1e9bda6ed95d97a572ef80c581d781b46aec",
+  "evidence_package": "docs/evidence/2026Q2",
+  "evidence_generated_utc": "2026-08-17T17:13:37+00:00",
+  "reviewer": "Philip Bergman",
+  "review_date": "2026-08-17",
+  "decision": "approve \u2014 reviewed reconciliation and exceptions",
+  "prior_archived_to": "dashboard/_archive/20260817T171642Z",
+  "note": ""
+}

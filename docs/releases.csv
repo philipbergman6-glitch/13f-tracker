@@ -1,0 +1,2 @@
+published_utc,action,quarter,pipeline_run_utc,source_commit,dashboard_sha256,evidence_package,evidence_generated_utc,reviewer,review_date,decision,prior_archived_to,note
+2026-08-17T17:16:42+00:00,publish,2026Q2,2026-08-17T17:12:06+00:00,c14b08e1ec7ea8fde5bf439d55c67ce9797e7673,9023de90e406bd604155814de2ed1e9bda6ed95d97a572ef80c581d781b46aec,docs/evidence/2026Q2,2026-08-17T17:13:37+00:00,Philip Bergman,2026-08-17,approve — reviewed reconciliation and exceptions,dashboard/_archive/20260817T171642Z,
