@@ -157,9 +157,9 @@ section { margin-bottom: 40px; }
 
 /* ---- consensus ---- */
 .consensus-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-@media (max-width: 900px) { .consensus-grid { grid-template-columns: 1fr; } }
-.consensus-panel { padding: 18px 20px 8px; }
-.consensus-panel h2 { font-size: 15px; font-weight: 640; display: flex; align-items: baseline; gap: 8px; }
+@media (max-width: 900px) { .consensus-grid { grid-template-columns: minmax(0, 1fr); } }
+.consensus-panel { padding: 18px 20px 8px; min-width: 0; overflow: hidden; }
+.consensus-panel h2 { font-size: 15px; font-weight: 640; display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 8px; }
 .consensus-panel h2 .glyph { font-size: 13px; }
 .consensus-panel h2 .defn { font-weight: 400; font-size: 12px; color: var(--muted); }
 .consensus-empty { color: var(--muted); font-size: 13px; padding: 14px 0 18px; }
@@ -320,9 +320,13 @@ footer.site {
 
 /* ---- small screens ---- */
 @media (max-width: 640px) {
-  .site-inner { padding: 12px 16px; }
-  .status-inner { padding: 6px 16px; }
-  .wrap { padding: 22px 16px 48px; }
+  html, body { width: 100%; max-width: 100%; overflow-x: hidden; }
+  .site-inner { padding: 12px 16px; align-items: center; }
+  .site-quarter { order: 3; flex: 0 0 100%; }
+  .site-spacer { display: none; }
+  #themeBtn { margin-left: auto; }
+  .status-inner { display: block; padding: 6px 16px; }
+  .wrap { width: 100%; min-width: 0; padding: 22px 16px 48px; }
   .foot-inner { padding: 22px 16px 30px; }
   .lead { gap: 14px 24px; margin-bottom: 30px; }
   .lead-text h1 { font-size: 30px; }
@@ -341,6 +345,21 @@ footer.site {
   .sector .barrow { grid-template-columns: minmax(96px, 50%) 1fr 68px 44px; }
   .barrow .bname { font-size: 12.5px; }
   .listpanel, .tablepanel, .consensus-panel { padding-left: 14px; padding-right: 14px; }
+  .consensus-panel h2 .defn { flex-basis: 100%; padding-left: 21px; }
+  table.cons, table.cons tbody { display: block; width: 100%; }
+  table.cons tr {
+    display: grid; grid-template-columns: minmax(92px, 30%) minmax(0, 1fr);
+    column-gap: 10px; border-top: 1px solid var(--hairline);
+  }
+  table.cons tr:first-child { border-top: none; }
+  table.cons td { display: block; min-width: 0; border-top: none; }
+  table.cons td:first-child { grid-column: 1; grid-row: 1; width: auto; padding-bottom: 1px; }
+  .cons .who { grid-column: 2; grid-row: 1 / span 2; overflow-wrap: anywhere; }
+  .consensus-grid, .consensus-panel, table.cons { min-width: 0; max-width: 100%; }
+  .cons .who .mgr { display: inline; white-space: normal; overflow-wrap: anywhere; }
+  .cons .count { grid-column: 1; grid-row: 2; width: auto; text-align: left; padding-top: 0; }
+  .cons .count .n { font-size: 12px; }
+  .status-item { display: block; width: 100%; white-space: normal; overflow-wrap: anywhere; }
 }
 </style>
 </head>
@@ -981,6 +1000,19 @@ window.addEventListener("hashchange", route);
 renderStatusBar();
 renderFooter();
 route();
+{
+  const viewportWidth = document.documentElement.clientWidth;
+  const offenders = [...document.querySelectorAll("body *")]
+    .filter(node => node.getBoundingClientRect().right > viewportWidth + 1)
+    .slice(0, 8)
+    .map(node => node.tagName.toLowerCase() +
+      (node.className ? "." + String(node.className).trim().replace(/\s+/g, ".") : ""));
+  const qa = document.createElement("meta");
+  qa.name = "qa-overflow";
+  qa.content = document.documentElement.scrollWidth + "/" + viewportWidth +
+    (offenders.length ? " " + offenders.join(",") : "");
+  document.head.append(qa);
+}
 </script>
 </body>
 </html>
