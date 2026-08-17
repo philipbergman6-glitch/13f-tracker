@@ -26,15 +26,11 @@ import changes
 import figi
 import status
 import validate
-from common import HOLDINGS, OUT, load_manager_map, quarter_end_date, quarter_range
+from common import (HOLDINGS, OUT, load_manager_map, quarter_end_date,
+                    quarter_range, report_date_to_qkey)
 from edgar import fetch_filing_docs, list_13f_filings, parse_filing
 
 RUN_STATUS_PATH = OUT / "run_status.json"
-
-
-def report_date_to_qkey(rdate: str) -> str:
-    year, month = int(rdate[:4]), int(rdate[5:7])
-    return f"{year}Q{(month + 2) // 3}"
 
 
 def main() -> None:
@@ -181,9 +177,10 @@ def main() -> None:
             build.write_manager_quarter(span_manager, qkey, kept, tickers)
             n_files += 1
 
-    # 5) verification + flags + statuses + validation + change tables
-    n_match, n_mismatch = build.write_rowcount_verification(parsed_all)
+    # 5) verification + flags + merge decisions + statuses + validation + changes
+    n_match, n_mismatch, n_value_mismatch = build.write_rowcount_verification(parsed_all)
     build.write_flags()
+    build.write_merge_decisions()
     status_path = status.write_status_csv(statuses)
     findings.extend(validate.validate_identity(merged))
     findings.extend(validate.validate_tickers(tickers))
@@ -194,7 +191,8 @@ def main() -> None:
     unmapped = len(cusips) - sum(1 for c in cusips if tickers.get(c))
     print(f"\nDone: {len(parsed_all)} filings parsed, {n_files} holdings CSVs, "
           f"{n_changes} change tables.")
-    print(f"Row-count check: {n_match} match / {n_mismatch} mismatch "
+    print(f"Cover-page check: rows {n_match} match / {n_mismatch} mismatch, "
+          f"value totals {n_value_mismatch} mismatch "
           f"(data/out/verification_rowcounts.csv)")
     print(f"CUSIPs: {len(cusips)} total, {unmapped} without ticker "
           f"(data/ref/cusip_ticker.csv)")

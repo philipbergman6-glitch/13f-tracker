@@ -18,7 +18,7 @@ import sys
 from collections import defaultdict
 
 from common import HOLDINGS, OUT, manager_slug
-from edgar import ParsedFiling
+from edgar import ParsedFiling, filing_index_url
 
 HOLDINGS_COLUMNS = [
     "filer_cik", "accession", "cusip", "ticker", "issuer", "class", "put_call",
@@ -28,11 +28,28 @@ HOLDINGS_COLUMNS = [
 
 _flags: list[dict] = []
 
+# Every fetched 13F-HR gets an explicit merge decision (kept in / excluded from
+# the quarter-final book, and why) so the release evidence package can explain
+# each book's composition without re-running the merge. Written per run to
+# data/out/merge_decisions.csv; dedupe_filers appends DUPLICATE_BOOK rows,
+# which supersede the per-filer merge role for the same accession.
+IN_BOOK_ROLES = {"BASE_ORIGINAL", "BASE_RESTATEMENT", "NEW_HOLDINGS"}
+
+_merge_decisions: list[dict] = []
+
 
 def flag(cik: int, qkey: str, accession: str, problem: str) -> None:
     print(f"!! AMENDMENT FLAG [{cik} {qkey} {accession}]: {problem}", file=sys.stderr)
     _flags.append({"filer_cik": cik, "quarter": qkey, "accession": accession,
                    "problem": problem})
+
+
+def _decide(cik: int, qkey: str, p: ParsedFiling, role: str, detail: str) -> None:
+    _merge_decisions.append({
+        "filer_cik": cik, "quarter": qkey, "accession": p.filing.accession,
+        "form": p.filing.form, "filing_date": p.filing.filing_date,
+        "role": role, "in_book": role in IN_BOOK_ROLES, "detail": detail,
+    })
 
 
 def merge_quarter(cik: int, qkey: str, parsed: list[ParsedFiling]) -> list[ParsedFiling]:
@@ -62,10 +79,41 @@ def merge_quarter(cik: int, qkey: str, parsed: list[ParsedFiling]) -> list[Parse
         if base is None:
             flag(cik, qkey, amendments[0].filing.accession if amendments else "-",
                  "no original 13F-HR and no RESTATEMENT; quarter has no base filing")
+            for p in parsed:
+                _decide(cik, qkey, p, "EXCLUDED_NO_BASE",
+                        "no original 13F-HR and no RESTATEMENT; quarter has no "
+                        "base filing")
             return []
 
     adds = [a for a in amendments
             if a.amendment_type == "NEW HOLDINGS" and (a.amendment_no or 0) > cutoff]
+
+    for p in parsed:
+        if p is base:
+            role = "BASE_RESTATEMENT" if p.is_amendment else "BASE_ORIGINAL"
+            detail = ("latest RESTATEMENT restates the quarter in its entirety"
+                      if p.is_amendment else "original 13F-HR is the base filing")
+        elif p in adds:
+            role = "NEW_HOLDINGS"
+            detail = (f"NEW HOLDINGS amendment {p.amendment_no} appended after "
+                      f"the base filing (Form 13F Special Instruction 3)")
+        elif not p.is_amendment:
+            role = "SUPERSEDED_ORIGINAL"
+            detail = ("replaced by a later RESTATEMENT amendment" if restatements
+                      else "duplicate original 13F-HR; latest-filed used as base")
+        elif p.amendment_type == "RESTATEMENT":
+            role = "SUPERSEDED_RESTATEMENT"
+            detail = "a later RESTATEMENT is the quarter-final base"
+        elif p.amendment_type == "NEW HOLDINGS":
+            role = "PRE_RESTATEMENT_AMENDMENT"
+            detail = (f"NEW HOLDINGS amendment {p.amendment_no} predates the "
+                      f"base RESTATEMENT, whose full restatement subsumes it")
+        else:
+            role = "EXCLUDED_UNKNOWN_TYPE"
+            detail = (f"amendmentType={p.amendment_type!r} is neither "
+                      f"RESTATEMENT nor NEW HOLDINGS; excluded (see flags.csv)")
+        _decide(cik, qkey, p, role, detail)
+
     return [base] + adds
 
 
@@ -108,6 +156,8 @@ def dedupe_filers(manager: str, qkey: str,
                       f"({len(sig)} rows, CUSIP+class+put/call+type+shares+value "
                       f"multiset match); excluded to avoid double-counting {manager}")
             flag(cik, qkey, plist[0].filing.accession, f"{manager}: {detail}")
+            for p in plist:
+                _decide(cik, qkey, p, "DUPLICATE_BOOK", f"{manager}: {detail}")
             dropped[cik] = detail
             continue
         sigs[sig] = (cik, "+".join(p.filing.accession for p in plist))
@@ -149,19 +199,48 @@ def write_flags() -> None:
         w.writerows(_flags)
 
 
-def write_rowcount_verification(parsed_all: list[ParsedFiling]) -> tuple[int, int]:
-    """data/out/verification_rowcounts.csv: parsed row count vs cover-page
-    tableEntryTotal for every fetched filing. Returns (n_match, n_mismatch)."""
+MERGE_DECISION_COLUMNS = ["filer_cik", "quarter", "accession", "form",
+                          "filing_date", "role", "in_book", "detail"]
+
+
+def write_merge_decisions() -> None:
+    """data/out/merge_decisions.csv: every fetched 13F-HR's role in (or
+    exclusion from) its quarter-final book, in decision order. A later
+    DUPLICATE_BOOK row supersedes an earlier per-filer merge role."""
     OUT.mkdir(parents=True, exist_ok=True)
-    n_match = n_mismatch = 0
+    with open(OUT / "merge_decisions.csv", "w", newline="", encoding="utf-8") as fh:
+        w = csv.DictWriter(fh, fieldnames=MERGE_DECISION_COLUMNS)
+        w.writeheader()
+        w.writerows(_merge_decisions)
+
+
+def write_rowcount_verification(parsed_all: list[ParsedFiling]) -> tuple[int, int, int]:
+    """data/out/verification_rowcounts.csv: parsed row count and summed value
+    vs the cover page's tableEntryTotal / tableValueTotal for every fetched
+    filing, with its EDGAR index URL. Returns (n_rows_match, n_rows_mismatch,
+    n_value_mismatch); mismatches are filer-side cover-page errors unless a
+    parse bug is at fault — each must be explained in
+    data/ref/known_exceptions.csv before an evidence package can be built."""
+    OUT.mkdir(parents=True, exist_ok=True)
+    n_match = n_mismatch = n_value_mismatch = 0
     with open(OUT / "verification_rowcounts.csv", "w", newline="", encoding="utf-8") as fh:
         w = csv.writer(fh)
-        w.writerow(["filer_cik", "accession", "form", "report_date",
-                    "rows_parsed", "table_entry_total", "match"])
+        w.writerow(["filer_cik", "accession", "form", "filing_date", "report_date",
+                    "rows_parsed", "table_entry_total", "rows_match",
+                    "value_parsed_usd", "table_value_total", "value_match",
+                    "filing_url"])
         for p in parsed_all:
-            match = p.table_entry_total is not None and len(p.rows) == p.table_entry_total
-            n_match += match
-            n_mismatch += not match
+            rows_match = (p.table_entry_total is not None
+                          and len(p.rows) == p.table_entry_total)
+            value_parsed = sum(int(float(r["value_usd"] or 0)) for r in p.rows)
+            value_match = (p.table_value_total is not None
+                           and value_parsed == p.table_value_total)
+            n_match += rows_match
+            n_mismatch += not rows_match
+            n_value_mismatch += not value_match
             w.writerow([p.filing.cik, p.filing.accession, p.filing.form,
-                        p.filing.report_date, len(p.rows), p.table_entry_total, match])
-    return n_match, n_mismatch
+                        p.filing.filing_date, p.filing.report_date,
+                        len(p.rows), p.table_entry_total, rows_match,
+                        value_parsed, p.table_value_total, value_match,
+                        filing_index_url(p.filing.cik, p.filing.accession)])
+    return n_match, n_mismatch, n_value_mismatch

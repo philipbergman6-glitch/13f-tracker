@@ -48,6 +48,12 @@ def _cik_url_name(cik: int) -> str:
     return f"CIK{cik:010d}.json"
 
 
+def filing_index_url(cik: int, accession: str) -> str:
+    """Human-facing EDGAR filing-index page for an accession (citation URL)."""
+    return (f"https://www.sec.gov/Archives/edgar/data/{cik}/"
+            f"{accession.replace('-', '')}/{accession}-index.htm")
+
+
 FORMS_13F = ("13F-HR", "13F-HR/A", "13F-NT", "13F-NT/A")
 
 

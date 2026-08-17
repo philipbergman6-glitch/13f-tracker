@@ -46,21 +46,28 @@ def make_parsed(cik=1, acc="0000000001-26-000001", fdate="2026-05-01",
 
 
 class FlagCapture(unittest.TestCase):
-    """Run each test with a clean flag list and captured stderr."""
+    """Run each test with clean flag/decision lists and captured stderr."""
 
     def setUp(self):
         self._saved_flags = build._flags[:]
+        self._saved_decisions = build._merge_decisions[:]
         build._flags.clear()
+        build._merge_decisions.clear()
         self._stderr = redirect_stderr(io.StringIO())
         self._stderr.__enter__()
 
     def tearDown(self):
         self._stderr.__exit__(None, None, None)
         build._flags[:] = self._saved_flags
+        build._merge_decisions[:] = self._saved_decisions
 
     @property
     def flags(self):
         return build._flags
+
+    @property
+    def decisions(self):
+        return {d["accession"]: d for d in build._merge_decisions}
 
 
 class TestMergeQuarter(FlagCapture):
@@ -115,6 +122,110 @@ class TestMergeQuarter(FlagCapture):
                           amendment_type="NEW HOLDINGS")
         self.assertEqual(build.merge_quarter(1, "2026Q1", [add]), [])
         self.assertEqual(len(self.flags), 1)
+
+
+class TestMergeDecisions(FlagCapture):
+    """Every fetched 13F-HR gets an explicit, evidence-package-ready role."""
+
+    def test_restatement_chain_roles(self):
+        orig = make_parsed(acc="a1")
+        add1 = make_parsed(acc="a2", fdate="2026-05-10", is_amendment=True,
+                           amendment_no=1, amendment_type="NEW HOLDINGS")
+        restated = make_parsed(acc="a3", fdate="2026-06-01", is_amendment=True,
+                               amendment_no=2, amendment_type="RESTATEMENT")
+        add2 = make_parsed(acc="a4", fdate="2026-06-10", is_amendment=True,
+                           amendment_no=3, amendment_type="NEW HOLDINGS")
+        build.merge_quarter(1, "2026Q1", [orig, add1, restated, add2])
+        roles = {acc: d["role"] for acc, d in self.decisions.items()}
+        self.assertEqual(roles, {"a1": "SUPERSEDED_ORIGINAL",
+                                 "a2": "PRE_RESTATEMENT_AMENDMENT",
+                                 "a3": "BASE_RESTATEMENT",
+                                 "a4": "NEW_HOLDINGS"})
+        self.assertEqual([self.decisions[a]["in_book"] for a in
+                          ("a1", "a2", "a3", "a4")],
+                         [False, False, True, True])
+
+    def test_original_only_role(self):
+        build.merge_quarter(1, "2026Q1", [make_parsed(acc="a1")])
+        self.assertEqual(self.decisions["a1"]["role"], "BASE_ORIGINAL")
+        self.assertTrue(self.decisions["a1"]["in_book"])
+
+    def test_no_base_records_exclusions(self):
+        add = make_parsed(acc="a1", is_amendment=True, amendment_no=1,
+                          amendment_type="NEW HOLDINGS")
+        build.merge_quarter(1, "2026Q1", [add])
+        self.assertEqual(self.decisions["a1"]["role"], "EXCLUDED_NO_BASE")
+        self.assertFalse(self.decisions["a1"]["in_book"])
+
+    def test_unknown_type_role(self):
+        orig = make_parsed(acc="a1")
+        odd = make_parsed(acc="a2", is_amendment=True, amendment_no=1,
+                          amendment_type=None)
+        build.merge_quarter(1, "2026Q1", [orig, odd])
+        self.assertEqual(self.decisions["a2"]["role"], "EXCLUDED_UNKNOWN_TYPE")
+
+    def test_duplicate_book_decision_supersedes_merge_role(self):
+        a = build.merge_quarter(1, "2026Q1", [make_parsed(cik=1, acc="a1")])
+        b = build.merge_quarter(2, "2026Q1", [make_parsed(cik=2, acc="b1")])
+        build.dedupe_filers("m", "2026Q1", {1: a, 2: b})
+        # last decision per accession wins (evidence.effective_roles contract)
+        self.assertEqual(self.decisions["b1"]["role"], "DUPLICATE_BOOK")
+        self.assertFalse(self.decisions["b1"]["in_book"])
+        self.assertEqual(self.decisions["a1"]["role"], "BASE_ORIGINAL")
+
+    def test_write_merge_decisions_csv(self):
+        import csv as _csv
+        import tempfile
+        from pathlib import Path as _Path
+        build.merge_quarter(1, "2026Q1", [make_parsed(acc="a1")])
+        saved = build.OUT
+        with tempfile.TemporaryDirectory() as tmp:
+            build.OUT = _Path(tmp)
+            try:
+                build.write_merge_decisions()
+                with open(_Path(tmp) / "merge_decisions.csv",
+                          newline="", encoding="utf-8") as fh:
+                    rows = list(_csv.DictReader(fh))
+            finally:
+                build.OUT = saved
+        self.assertEqual(rows[0]["accession"], "a1")
+        self.assertEqual(rows[0]["role"], "BASE_ORIGINAL")
+        self.assertEqual(rows[0]["in_book"], "True")
+
+
+class TestRowcountVerification(FlagCapture):
+    def test_value_totals_and_urls(self):
+        import csv as _csv
+        import tempfile
+        from pathlib import Path as _Path
+        good = make_parsed(cik=7, acc="0000000007-26-000001",
+                           rows=[make_row(value="600"), make_row(value="400")])
+        good.table_value_total = 1000
+        bad = make_parsed(cik=7, acc="0000000007-26-000002",
+                          rows=[make_row(value="600")])
+        bad.table_value_total = 601  # $1 cover-page drift (TCI 2025Q3 shape)
+        saved = build.OUT
+        with tempfile.TemporaryDirectory() as tmp:
+            build.OUT = _Path(tmp)
+            try:
+                counts = build.write_rowcount_verification([good, bad])
+                with open(_Path(tmp) / "verification_rowcounts.csv",
+                          newline="", encoding="utf-8") as fh:
+                    rows = list(_csv.DictReader(fh))
+            finally:
+                build.OUT = saved
+        self.assertEqual(counts, (2, 0, 1))  # rows all match, 1 value mismatch
+        by_acc = {r["accession"]: r for r in rows}
+        g = by_acc["0000000007-26-000001"]
+        self.assertEqual((g["value_parsed_usd"], g["value_match"],
+                          g["rows_match"]), ("1000", "True", "True"))
+        b = by_acc["0000000007-26-000002"]
+        self.assertEqual((b["value_parsed_usd"], b["table_value_total"],
+                          b["value_match"]), ("600", "601", "False"))
+        self.assertEqual(g["filing_url"],
+                         "https://www.sec.gov/Archives/edgar/data/7/"
+                         "000000000726000001/0000000007-26-000001-index.htm")
+        self.assertEqual(g["filing_date"], "2026-05-01")
 
 
 class TestDedupeFilers(FlagCapture):

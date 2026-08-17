@@ -107,6 +107,12 @@ def quarter_end_date(qkey: str) -> str:
     return f"{year}-{QUARTER_END[q]}"
 
 
+def report_date_to_qkey(rdate: str) -> str:
+    """EDGAR reportDate '2026-06-30' -> '2026Q2'."""
+    year, month = int(rdate[:4]), int(rdate[5:7])
+    return f"{year}Q{(month + 2) // 3}"
+
+
 def quarter_range(start: str, end: str) -> list[str]:
     """Inclusive list of quarter keys from start to end, e.g. 2024Q2..2026Q2."""
     y, q = int(start[:4]), int(start[5])
