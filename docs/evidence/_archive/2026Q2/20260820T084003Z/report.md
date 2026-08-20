@@ -1,6 +1,6 @@
 # Evidence package — 2026Q2 release
 
-Generated 2026-08-20T08:40:03+00:00 from pipeline run 2026-08-20T08:36:36+00:00 (window 2024Q2–2026Q2, force_refresh=True), source commit `03489a230ab1` with 59 uncommitted change(s) at generation time.
+Generated 2026-08-20T08:36:39+00:00 from pipeline run 2026-08-20T08:36:36+00:00 (window 2024Q2–2026Q2, force_refresh=True), source commit `03489a230ab1` with 45 uncommitted change(s) at generation time.
 
 Every figure below is copied from that run's outputs (nothing re-derived); machine-readable appendices sit next to this report. Required-item checklist:
 
@@ -100,7 +100,7 @@ Every mapped (manager, filer, quarter) in the window has an explicit committed s
 
 ## 6. Automated tests
 
-`python -m unittest discover -s tests` (Python 3.14.6): **159 tests, PASS**, run 2026-08-20T08:40:02+00:00 (`test_results.json`). A failing suite blocks this package.
+`python -m unittest discover -s tests` (Python 3.14.6): **159 tests, PASS**, run 2026-08-20T08:36:37+00:00 (`test_results.json`). A failing suite blocks this package.
 
 ## 7. Known exceptions
 
@@ -117,9 +117,9 @@ Accepted filer-side discrepancies and scope decisions, from the committed regist
 
 ## 8. Checksums and versions
 
-`checksums.csv` holds SHA-256 digests for the release dashboard build and all 316 source data files it derives from (holdings CSVs, filer statuses, reference tables, change tables, run gate outputs). At publication, release.py re-verifies every digest against the artifacts being published. Source code version: commit `03489a230ab13f60437586b363cb2cf0b2aad38d` (2026-08-17T21:58:34+03:00).
+`checksums.csv` holds SHA-256 digests for the release dashboard build and all 315 source data files it derives from (holdings CSVs, filer statuses, reference tables, change tables, run gate outputs). At publication, release.py re-verifies every digest against the artifacts being published. Source code version: commit `03489a230ab13f60437586b363cb2cf0b2aad38d` (2026-08-17T21:58:34+03:00).
 
-- `dashboard/staging/index.html` — SHA-256 `7ce80d2ae8e1f3a077041b5c115abe931822bbdf236c20483338cf10b98de4fa`
+- `dashboard/staging/index.html` — SHA-256 `561a949c5b7ca76adce75bc2680cdeb00ead08e050bac89ba611a6243304572f`
 
 ## 9. How to reproduce this release
 

@@ -1,6 +1,6 @@
 {
   "release_quarter": "2026Q2",
-  "generated_utc": "2026-08-20T08:40:03+00:00",
+  "generated_utc": "2026-08-20T08:36:39+00:00",
   "source_commit": "03489a230ab13f60437586b363cb2cf0b2aad38d",
   "source_commit_date": "2026-08-17T21:58:34+03:00",
   "uncommitted_changes_at_generation": [
@@ -48,21 +48,7 @@
     " M data/ref/manager_map.csv",
     " M data/ref/security_aliases.csv",
     " M data/ref/warning_dispositions.csv",
-    " M docs/evidence/2026Q2/checksums.csv",
-    " M docs/evidence/2026Q2/exceptions.csv",
-    " M docs/evidence/2026Q2/filer_status.csv",
-    " M docs/evidence/2026Q2/filings.csv",
-    " M docs/evidence/2026Q2/manifest.json",
-    " M docs/evidence/2026Q2/merge_decisions.csv",
-    " M docs/evidence/2026Q2/report.md",
-    " M docs/evidence/2026Q2/test_results.json",
-    " M docs/evidence/2026Q2/validation.csv",
-    " M docs/evidence/2026Q2/warning_dispositions.csv",
-    " M src/dashboard.py",
-    " M src/dashboard_template.html",
-    "?? .scratch/",
-    "?? data/ref/manager_people.csv",
-    "?? docs/evidence/_archive/2026Q2/20260820T083639Z/"
+    "?? .scratch/"
   ],
   "pipeline_run": {
     "ok": true,
@@ -86,7 +72,7 @@
     "dispositioned": 36,
     "unresolved": 0
   },
-  "n_checksummed_files": 317,
+  "n_checksummed_files": 316,
   "package_files": [
     "checksums.csv",
     "exceptions.csv",

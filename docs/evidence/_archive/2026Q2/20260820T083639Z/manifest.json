@@ -1,0 +1,44 @@
+{
+  "release_quarter": "2026Q2",
+  "generated_utc": "2026-08-17T18:58:14+00:00",
+  "source_commit": "4351b912661becb44096f29b0b6cbc0c3c61c5a6",
+  "source_commit_date": "2026-08-17T21:57:54+03:00",
+  "uncommitted_changes_at_generation": [
+    "?? .scratch/"
+  ],
+  "pipeline_run": {
+    "ok": true,
+    "completed_utc": "2026-08-17T18:58:11+00:00",
+    "window": [
+      "2024Q2",
+      "2026Q2"
+    ],
+    "force_refresh": true,
+    "blocked": [],
+    "validation_errors": 0,
+    "validation_warnings": 42,
+    "validation_warnings_dispositioned": 42,
+    "unresolved_validation_warnings": [],
+    "invalid_warning_dispositions": 0,
+    "same_day_filings": []
+  },
+  "n_filings": 201,
+  "warning_dispositions": {
+    "warnings": 42,
+    "dispositioned": 42,
+    "unresolved": 0
+  },
+  "n_checksummed_files": 352,
+  "package_files": [
+    "checksums.csv",
+    "exceptions.csv",
+    "filer_status.csv",
+    "filings.csv",
+    "flags.csv",
+    "merge_decisions.csv",
+    "test_results.json",
+    "validation.csv",
+    "warning_dispositions.csv",
+    "report.md"
+  ]
+}
