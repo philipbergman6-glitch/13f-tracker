@@ -206,6 +206,7 @@ a.card:hover { text-decoration: none; border-color: var(--baseline); box-shadow:
   font-size: 38px; font-weight: 560; line-height: 1.1; letter-spacing: -.005em;
   margin: 2px 0 8px; text-wrap: balance;
 }
+.mhead .person { color: var(--ink-2); font-size: 13px; margin: 0 0 4px; }
 .mhead .filers { color: var(--muted); font-size: 12.5px; line-height: 1.6; }
 .mhead .qtag { color: var(--ink-2); font-size: 13px; margin-top: 2px; }
 .mhead .qnote { color: var(--muted); font-size: 12px; margin-top: 6px; max-width: 70ch; }
@@ -275,6 +276,11 @@ table.data th {
 table.data th.r, table.data td.r { text-align: right; padding-right: 0; padding-left: 12px; }
 table.data td { padding: 7px 12px 7px 0; border-bottom: 1px solid var(--hairline); vertical-align: baseline; }
 table.data tr:last-child td { border-bottom: none; }
+table.data tr.cumark td { border-bottom: 1.5px solid var(--muted); }
+.cumtag {
+  display: inline-block; font-size: 10px; font-weight: 600; letter-spacing: .05em;
+  text-transform: uppercase; color: var(--muted); margin-right: 8px;
+}
 table.data td .issuer { color: var(--muted); font-size: 11.5px; margin-left: 6px; }
 .chip { font-size: 11px; font-weight: 640; letter-spacing: .05em; white-space: nowrap; }
 .arrow { color: var(--muted); }
@@ -603,6 +609,14 @@ function renderManager(slug) {
   const head = el("div", "mhead");
   head.append(el("div", "eyebrow", "Manager report · " + m.quarter_label));
   head.append(el("h1", "serif", m.manager));
+  if (m.person) {
+    const p = el("div", "person");
+    const a = el("a", null, m.person.name);
+    if (m.person.url) { a.href = m.person.url; a.target = "_blank"; a.rel = "noopener"; }
+    p.append(a);
+    if (m.person.title) p.append(document.createTextNode(" · " + m.person.title));
+    head.append(p);
+  }
   const filers = el("div", "filers");
   filers.append(document.createTextNode(
     m.filers.map(f => f.name + " (CIK " + f.cik + ")" +
@@ -775,7 +789,8 @@ function renderChanges(m) {
   p.append(el("div", "hnote", m.prev_quarter
     ? "vs " + qlabel(m.prev_quarter) + " · share-count based · new buys and exits always; " +
       "adds/trims at ≥25% share change on a ≥0.5% position, or ≥1pp of weight · " +
-      "prior shares adjusted for documented splits and identifier aliases"
+      "prior shares adjusted for documented splits and identifier aliases · " +
+      "ranked by book-weight moved (|Δ weight|)"
     : "no prior quarter on record"));
   if (!m.changes.length) {
     p.append(el("p", "consensus-empty", "No significant changes."));
@@ -785,13 +800,15 @@ function renderChanges(m) {
   const thead = el("thead");
   const hr = el("tr");
   [["Action", ""], ["Position", ""], ["Shares", "r"], ["Δ shares", "r"],
-   ["Weight", "r"], ["Δ weight", "r"], ["Value now", "r"]].forEach(([h, cls]) => {
+   ["Weight", "r"], ["Δ weight", "r"], ["Δ size", "r"], ["Value now", "r"]].forEach(([h, cls]) => {
     hr.append(el("th", cls || null, h));
   });
   thead.append(hr); t.append(thead);
   const tb = el("tbody");
   const dups = dupNames(m.changes);
-  m.changes.forEach(c => {
+  const ranked = m.changes.slice()
+    .sort((a, b) => Math.abs(+b.delta_weight_pp) - Math.abs(+a.delta_weight_pp));
+  ranked.forEach(c => {
     const tr = el("tr");
     const tdA = el("td"); tdA.append(chip(c.action)); tr.append(tdA);
     const tdP = el("td");
@@ -828,6 +845,17 @@ function renderChanges(m) {
     else tdDW.append(el("span", dw >= 0 ? "act-up" : "act-down",
       (dw >= 0 ? "+" : "") + dw.toFixed(2) + "pp"));
     tr.append(tdDW);
+    // Δ size: the move relative to the position's own prior weight
+    // (e.g. 10.80% -> 8.76% = -18.9% of the position). New buys have no base.
+    const wPrev = +c.weight_prev_pct;
+    const tdRel = el("td", "r");
+    if (wPrev > 0) {
+      const rel = dw / wPrev * 100;
+      tdRel.append(el("span", rel >= 0 ? "act-up" : "act-down", signedPct(rel)));
+    } else {
+      tdRel.append(el("span", "arrow", "new"));
+    }
+    tr.append(tdRel);
     tr.append(el("td", "r", +c.value_cur_usd ? fmtUSD(+c.value_cur_usd) : "—"));
     tb.append(tr);
   });
@@ -845,13 +873,24 @@ function renderHoldings(m) {
   const inner = el("div", "inner");
   const t = el("table", "data num");
   const hr = el("tr");
-  [["#", ""], ["Ticker", ""], ["Issuer", ""], ["Shares", "r"], ["Value", "r"], ["Weight", "r"]]
+  [["#", ""], ["Ticker", ""], ["Issuer", ""], ["Shares", "r"], ["Value", "r"], ["Weight", "r"], ["Cum.", "r"]]
     .forEach(([h, cls]) => hr.append(el("th", cls || null, h)));
   const thead = el("thead"); thead.append(hr); t.append(thead);
   const tb = el("tbody");
   const dups = dupNames(m.holdings);
+  // Concentration markers: top 5, top 10, then every further 10pp of
+  // cumulative weight — where the book's next 10% of value sits.
+  let cum = 0, nextMark = null;
   m.holdings.forEach((pos, i) => {
-    const tr = el("tr");
+    cum += pos.weight_pct;
+    let tag = null;
+    if (i === 4) tag = "top 5";
+    else if (i === 9) { tag = "top 10"; nextMark = Math.ceil(cum / 10) * 10; }
+    else if (nextMark !== null && cum >= nextMark && i < m.holdings.length - 1) {
+      tag = nextMark + "%";
+      while (cum >= nextMark) nextMark += 10;
+    }
+    const tr = el("tr", tag ? "cumark" : null);
     tr.append(el("td", null, String(i + 1)));
     tr.append(el("td", null, pos.ticker || "—"));
     tr.append(el("td", null, pos.issuer +
@@ -860,6 +899,10 @@ function renderHoldings(m) {
     tr.append(el("td", "r", fmtInt(pos.shares)));
     tr.append(el("td", "r", fmtFullUSD(pos.value)));
     tr.append(el("td", "r", pos.weight_pct.toFixed(2) + "%"));
+    const tdC = el("td", "r");
+    if (tag) tdC.append(el("span", "cumtag", tag));
+    tdC.append(document.createTextNode(cum.toFixed(1) + "%"));
+    tr.append(tdC);
     tb.append(tr);
   });
   t.append(tb);

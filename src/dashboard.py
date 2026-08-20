@@ -291,6 +291,15 @@ def load_aum_by_manager() -> dict[str, dict]:
         return {r["manager"]: r for r in csv.DictReader(fh)}
 
 
+def load_people_by_manager(path: Path = REF / "manager_people.csv"
+                           ) -> dict[str, dict]:
+    """manager -> its data/ref/manager_people.csv row (key person + firm bio URL)."""
+    if not path.exists():
+        return {}
+    with open(path, newline="", encoding="utf-8") as fh:
+        return {r["manager"]: r for r in csv.DictReader(fh)}
+
+
 def load_sector_map() -> dict[str, str]:
     path = REF / "sectors.csv"
     if not path.exists():
@@ -333,6 +342,7 @@ def build_payload(quarter: str | None = None) -> dict:
     spans = load_manager_map()
     managers = sorted({s.manager for s in spans})
     aum_by_manager = load_aum_by_manager()
+    people_by_manager = load_people_by_manager()
     sector_of = load_sector_map()
     flags = load_pipeline_flags()
     quality_notes = load_data_quality_notes()
@@ -373,6 +383,7 @@ def build_payload(quarter: str | None = None) -> dict:
         options = load_options_rows(cur_path)
         mgr_spans = [s for s in spans if s.manager == m]
         aum_row = aum_by_manager.get(m, {})
+        person_row = people_by_manager.get(m)
         relevant_quarters = {qkey, prev_q}
         manager_quality_notes = [
             note for note_q in relevant_quarters if note_q
@@ -386,6 +397,11 @@ def build_payload(quarter: str | None = None) -> dict:
             "prev_quarter_label": qlabel(prev_q) if prev_q else None,
             "later_filing": latest.get(slug) if latest.get(slug, qkey) > qkey else None,
             "filers": filer_entries(mgr_spans, qkey, cur_path, flags),
+            "person": ({
+                "name": person_row["person"],
+                "title": person_row.get("title", ""),
+                "url": person_row.get("url", ""),
+            } if person_row else None),
             "accessions": load_accessions(cur_path),
             "stats": stats,
             "aum": {
