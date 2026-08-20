@@ -1,0 +1,69 @@
+{
+  "release_quarter": "2026Q2",
+  "generated_utc": "2026-08-17T18:23:49+00:00",
+  "source_commit": "1e6334142fd324ea82340b8867f2774340443280",
+  "source_commit_date": "2026-08-17T20:16:46+03:00",
+  "uncommitted_changes_at_generation": [
+    "M data/holdings/leon-cooperman/2025Q3.csv",
+    " M data/holdings/leon-cooperman/2025Q4.csv",
+    " M data/holdings/leon-cooperman/2026Q1.csv",
+    " M data/holdings/leon-cooperman/2026Q2.csv",
+    " M data/ref/cusip_ticker.csv",
+    " M data/ref/known_exceptions.csv",
+    " M docs/evidence/2026Q2/checksums.csv",
+    " M docs/evidence/2026Q2/exceptions.csv",
+    " M docs/evidence/2026Q2/manifest.json",
+    " M docs/evidence/2026Q2/report.md",
+    " M docs/evidence/2026Q2/test_results.json",
+    " M src/changes.py",
+    " M src/dashboard.py",
+    " M src/dashboard_template.html",
+    " M src/evidence.py",
+    " M src/pipeline.py",
+    " M src/validate.py",
+    " M tests/test_dashboard.py",
+    " M tests/test_evidence.py",
+    " M tests/test_validate.py",
+    "?? .scratch/",
+    "?? data/ref/corporate_actions.csv",
+    "?? data/ref/security_aliases.csv",
+    "?? data/ref/warning_dispositions.csv",
+    "?? docs/evidence/2026Q2/warning_dispositions.csv",
+    "?? docs/evidence/_archive/2026Q2/20260817T182147Z/",
+    "?? tests/test_changes.py"
+  ],
+  "pipeline_run": {
+    "ok": true,
+    "completed_utc": "2026-08-17T18:23:46+00:00",
+    "window": [
+      "2024Q2",
+      "2026Q2"
+    ],
+    "force_refresh": true,
+    "blocked": [],
+    "validation_errors": 0,
+    "validation_warnings": 42,
+    "validation_warnings_dispositioned": 42,
+    "unresolved_validation_warnings": [],
+    "same_day_filings": []
+  },
+  "n_filings": 201,
+  "warning_dispositions": {
+    "warnings": 42,
+    "dispositioned": 42,
+    "unresolved": 0
+  },
+  "n_checksummed_files": 352,
+  "package_files": [
+    "checksums.csv",
+    "exceptions.csv",
+    "filer_status.csv",
+    "filings.csv",
+    "flags.csv",
+    "merge_decisions.csv",
+    "test_results.json",
+    "validation.csv",
+    "warning_dispositions.csv",
+    "report.md"
+  ]
+}

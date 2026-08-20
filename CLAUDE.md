@@ -1,7 +1,7 @@
 # 13_f
 
 ## What this is
-Quarterly 13F tracker for a fixed 20-manager list: EDGAR-only pipeline (ADR 0001) that
+Quarterly 13F tracker for a fixed 16-manager list: EDGAR-only pipeline (ADR 0001) that
 builds quarter-final holdings CSVs, a static HTML dashboard, and per-manager TradingView
 watchlists. Terminology in CONTEXT.md; decisions in `.scratch\13f-tracker\` (wayfinder map).
 

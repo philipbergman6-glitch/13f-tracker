@@ -1,0 +1,2 @@
+filer_cik,quarter,accession,problem
+2038540,2026Q1,0002038540-26-000004,"Situational Awareness: book identical to filer 2045724 acc 0002045724-26-000008 (42 rows, CUSIP+class+put/call+type+shares+value multiset match); excluded to avoid double-counting Situational Awareness"

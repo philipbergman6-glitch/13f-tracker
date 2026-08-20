@@ -177,5 +177,47 @@ class TestWriteCsv(unittest.TestCase):
                 self.assertTrue(lines[1].startswith("ERROR"))
 
 
+class TestWarningDispositions(unittest.TestCase):
+    def test_returns_warnings_without_a_reviewed_disposition(self):
+        findings = [
+            validate.Finding("WARN", "qoq-price", "2026Q2", "giverny", "",
+                             "", "09857L108", "split"),
+            validate.Finding("WARN", "qoq-price", "2026Q2", "giverny", "",
+                             "", "78463V107", "filer error"),
+        ]
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "warning_dispositions.csv"
+            fingerprint = validate.warning_fingerprint(findings[0])
+            path.write_text(
+                "check,quarter,manager,cusip,warning_fingerprint,classification,resolution,reference,reviewed_by,reviewed_date\n"
+                f"qoq-price,2026Q2,giverny,09857L108,{fingerprint},corporate-action,25-for-1 split,source,Philip,2026-08-17\n",
+                encoding="utf-8")
+
+            unresolved = validate.unresolved_warning_findings(findings, path)
+
+        self.assertEqual([f.cusip for f in unresolved], ["78463V107"])
+
+    def test_changed_warning_detail_invalidates_prior_disposition(self):
+        original = validate.Finding(
+            "WARN", "qoq-price", "2026Q2", "giverny", "", "",
+            "09857L108", "split 25x")
+        changed = validate.Finding(
+            "WARN", "qoq-price", "2026Q2", "giverny", "", "",
+            "09857L108", "split 20x")
+        disposition = {
+            "warning_fingerprint": validate.warning_fingerprint(original),
+            "classification": "corporate-action", "resolution": "reviewed",
+            "reference": "source", "reviewed_by": "Philip",
+            "reviewed_date": "2026-08-17",
+        }
+
+        coverage = validate.warning_disposition_coverage(
+            [changed], [disposition])
+
+        self.assertEqual(coverage["missing"], [changed])
+        self.assertEqual(coverage["orphan_fingerprints"],
+                         [validate.warning_fingerprint(original)])
+
+
 if __name__ == "__main__":
     unittest.main()

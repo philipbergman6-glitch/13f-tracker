@@ -157,9 +157,9 @@ section { margin-bottom: 40px; }
 
 /* ---- consensus ---- */
 .consensus-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-@media (max-width: 900px) { .consensus-grid { grid-template-columns: 1fr; } }
-.consensus-panel { padding: 18px 20px 8px; }
-.consensus-panel h2 { font-size: 15px; font-weight: 640; display: flex; align-items: baseline; gap: 8px; }
+@media (max-width: 900px) { .consensus-grid { grid-template-columns: minmax(0, 1fr); } }
+.consensus-panel { padding: 18px 20px 8px; min-width: 0; overflow: hidden; }
+.consensus-panel h2 { font-size: 15px; font-weight: 640; display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 8px; }
 .consensus-panel h2 .glyph { font-size: 13px; }
 .consensus-panel h2 .defn { font-weight: 400; font-size: 12px; color: var(--muted); }
 .consensus-empty { color: var(--muted); font-size: 13px; padding: 14px 0 18px; }
@@ -206,9 +206,18 @@ a.card:hover { text-decoration: none; border-color: var(--baseline); box-shadow:
   font-size: 38px; font-weight: 560; line-height: 1.1; letter-spacing: -.005em;
   margin: 2px 0 8px; text-wrap: balance;
 }
+.mhead .person { color: var(--ink-2); font-size: 13px; margin: 0 0 4px; }
 .mhead .filers { color: var(--muted); font-size: 12.5px; line-height: 1.6; }
 .mhead .qtag { color: var(--ink-2); font-size: 13px; margin-top: 2px; }
 .mhead .qnote { color: var(--muted); font-size: 12px; margin-top: 6px; max-width: 70ch; }
+.data-alert {
+  margin-top: 14px; max-width: 76ch; padding: 11px 13px;
+  border: 1px solid color-mix(in srgb, var(--down) 45%, var(--hairline));
+  border-left: 3px solid var(--down); border-radius: 4px;
+  background: color-mix(in srgb, var(--down) 7%, var(--surface));
+  color: var(--ink-2); font-size: 12.5px; line-height: 1.5;
+}
+.data-alert b { color: var(--ink); }
 
 .takeaways {
   font-family: "Newsreader", Georgia, serif;
@@ -267,6 +276,11 @@ table.data th {
 table.data th.r, table.data td.r { text-align: right; padding-right: 0; padding-left: 12px; }
 table.data td { padding: 7px 12px 7px 0; border-bottom: 1px solid var(--hairline); vertical-align: baseline; }
 table.data tr:last-child td { border-bottom: none; }
+table.data tr.cumark td { border-bottom: 1.5px solid var(--muted); }
+.cumtag {
+  display: inline-block; font-size: 10px; font-weight: 600; letter-spacing: .05em;
+  text-transform: uppercase; color: var(--muted); margin-right: 8px;
+}
 table.data td .issuer { color: var(--muted); font-size: 11.5px; margin-left: 6px; }
 .chip { font-size: 11px; font-weight: 640; letter-spacing: .05em; white-space: nowrap; }
 .arrow { color: var(--muted); }
@@ -312,9 +326,13 @@ footer.site {
 
 /* ---- small screens ---- */
 @media (max-width: 640px) {
-  .site-inner { padding: 12px 16px; }
-  .status-inner { padding: 6px 16px; }
-  .wrap { padding: 22px 16px 48px; }
+  html, body { width: 100%; max-width: 100%; overflow-x: hidden; }
+  .site-inner { padding: 12px 16px; align-items: center; }
+  .site-quarter { order: 3; flex: 0 0 100%; }
+  .site-spacer { display: none; }
+  #themeBtn { margin-left: auto; }
+  .status-inner { display: block; padding: 6px 16px; }
+  .wrap { width: 100%; min-width: 0; padding: 22px 16px 48px; }
   .foot-inner { padding: 22px 16px 30px; }
   .lead { gap: 14px 24px; margin-bottom: 30px; }
   .lead-text h1 { font-size: 30px; }
@@ -333,6 +351,21 @@ footer.site {
   .sector .barrow { grid-template-columns: minmax(96px, 50%) 1fr 68px 44px; }
   .barrow .bname { font-size: 12.5px; }
   .listpanel, .tablepanel, .consensus-panel { padding-left: 14px; padding-right: 14px; }
+  .consensus-panel h2 .defn { flex-basis: 100%; padding-left: 21px; }
+  table.cons, table.cons tbody { display: block; width: 100%; }
+  table.cons tr {
+    display: grid; grid-template-columns: minmax(92px, 30%) minmax(0, 1fr);
+    column-gap: 10px; border-top: 1px solid var(--hairline);
+  }
+  table.cons tr:first-child { border-top: none; }
+  table.cons td { display: block; min-width: 0; border-top: none; }
+  table.cons td:first-child { grid-column: 1; grid-row: 1; width: auto; padding-bottom: 1px; }
+  .cons .who { grid-column: 2; grid-row: 1 / span 2; overflow-wrap: anywhere; }
+  .consensus-grid, .consensus-panel, table.cons { min-width: 0; max-width: 100%; }
+  .cons .who .mgr { display: inline; white-space: normal; overflow-wrap: anywhere; }
+  .cons .count { grid-column: 1; grid-row: 2; width: auto; text-align: left; padding-top: 0; }
+  .cons .count .n { font-size: 12px; }
+  .status-item { display: block; width: 100%; white-space: normal; overflow-wrap: anywhere; }
 }
 </style>
 </head>
@@ -576,6 +609,14 @@ function renderManager(slug) {
   const head = el("div", "mhead");
   head.append(el("div", "eyebrow", "Manager report · " + m.quarter_label));
   head.append(el("h1", "serif", m.manager));
+  if (m.person) {
+    const p = el("div", "person");
+    const a = el("a", null, m.person.name);
+    if (m.person.url) { a.href = m.person.url; a.target = "_blank"; a.rel = "noopener"; }
+    p.append(a);
+    if (m.person.title) p.append(document.createTextNode(" · " + m.person.title));
+    head.append(p);
+  }
   const filers = el("div", "filers");
   filers.append(document.createTextNode(
     m.filers.map(f => f.name + " (CIK " + f.cik + ")" +
@@ -586,6 +627,12 @@ function renderManager(slug) {
       "A " + qlabel(m.later_filing) + " filing is already on record for this manager; " +
       "the dashboard is pinned to " + DATA.as_of_label + " for cross-manager comparability."));
   }
+  (m.data_quality_notes || []).forEach(note => {
+    const alert = el("div", "data-alert");
+    alert.append(el("b", null, "Filed-data caveat. "));
+    alert.append(document.createTextNode(note.summary + " " + note.resolution));
+    head.append(alert);
+  });
 
   const take = el("section");
   take.append(el("div", "eyebrow", "Takeaways"));
@@ -741,7 +788,9 @@ function renderChanges(m) {
   p.append(el("h2", null, "Significant changes"));
   p.append(el("div", "hnote", m.prev_quarter
     ? "vs " + qlabel(m.prev_quarter) + " · share-count based · new buys and exits always; " +
-      "adds/trims at ≥25% share change on a ≥0.5% position, or ≥1pp of weight"
+      "adds/trims at ≥25% share change on a ≥0.5% position, or ≥1pp of weight · " +
+      "prior shares adjusted for documented splits and identifier aliases · " +
+      "ranked by book-weight moved (|Δ weight|)"
     : "no prior quarter on record"));
   if (!m.changes.length) {
     p.append(el("p", "consensus-empty", "No significant changes."));
@@ -751,13 +800,15 @@ function renderChanges(m) {
   const thead = el("thead");
   const hr = el("tr");
   [["Action", ""], ["Position", ""], ["Shares", "r"], ["Δ shares", "r"],
-   ["Weight", "r"], ["Δ weight", "r"], ["Value now", "r"]].forEach(([h, cls]) => {
+   ["Weight", "r"], ["Δ weight", "r"], ["Δ size", "r"], ["Value now", "r"]].forEach(([h, cls]) => {
     hr.append(el("th", cls || null, h));
   });
   thead.append(hr); t.append(thead);
   const tb = el("tbody");
   const dups = dupNames(m.changes);
-  m.changes.forEach(c => {
+  const ranked = m.changes.slice()
+    .sort((a, b) => Math.abs(+b.delta_weight_pp) - Math.abs(+a.delta_weight_pp));
+  ranked.forEach(c => {
     const tr = el("tr");
     const tdA = el("td"); tdA.append(chip(c.action)); tr.append(tdA);
     const tdP = el("td");
@@ -771,6 +822,11 @@ function renderChanges(m) {
     tdS.append(document.createTextNode(fmtInt(+c.shares_prev)));
     tdS.append(el("span", "arrow", " → "));
     tdS.append(document.createTextNode(fmtInt(+c.shares_cur)));
+    if (+c.share_multiplier > 1) {
+      tdS.title = "Previous filing reported " + fmtInt(+c.shares_prev_reported) +
+        " shares; adjusted ×" + c.share_multiplier +
+        " for the split before comparison.";
+    }
     tr.append(tdS);
     const pct = c.pct_change_shares === "" ? null : parseFloat(c.pct_change_shares);
     const tdD = el("td", "r");
@@ -789,6 +845,17 @@ function renderChanges(m) {
     else tdDW.append(el("span", dw >= 0 ? "act-up" : "act-down",
       (dw >= 0 ? "+" : "") + dw.toFixed(2) + "pp"));
     tr.append(tdDW);
+    // Δ size: the move relative to the position's own prior weight
+    // (e.g. 10.80% -> 8.76% = -18.9% of the position). New buys have no base.
+    const wPrev = +c.weight_prev_pct;
+    const tdRel = el("td", "r");
+    if (wPrev > 0) {
+      const rel = dw / wPrev * 100;
+      tdRel.append(el("span", rel >= 0 ? "act-up" : "act-down", signedPct(rel)));
+    } else {
+      tdRel.append(el("span", "arrow", "new"));
+    }
+    tr.append(tdRel);
     tr.append(el("td", "r", +c.value_cur_usd ? fmtUSD(+c.value_cur_usd) : "—"));
     tb.append(tr);
   });
@@ -806,13 +873,24 @@ function renderHoldings(m) {
   const inner = el("div", "inner");
   const t = el("table", "data num");
   const hr = el("tr");
-  [["#", ""], ["Ticker", ""], ["Issuer", ""], ["Shares", "r"], ["Value", "r"], ["Weight", "r"]]
+  [["#", ""], ["Ticker", ""], ["Issuer", ""], ["Shares", "r"], ["Value", "r"], ["Weight", "r"], ["Cum.", "r"]]
     .forEach(([h, cls]) => hr.append(el("th", cls || null, h)));
   const thead = el("thead"); thead.append(hr); t.append(thead);
   const tb = el("tbody");
   const dups = dupNames(m.holdings);
+  // Concentration markers: top 5, top 10, then every further 10pp of
+  // cumulative weight — where the book's next 10% of value sits.
+  let cum = 0, nextMark = null;
   m.holdings.forEach((pos, i) => {
-    const tr = el("tr");
+    cum += pos.weight_pct;
+    let tag = null;
+    if (i === 4) tag = "top 5";
+    else if (i === 9) { tag = "top 10"; nextMark = Math.ceil(cum / 10) * 10; }
+    else if (nextMark !== null && cum >= nextMark && i < m.holdings.length - 1) {
+      tag = nextMark + "%";
+      while (cum >= nextMark) nextMark += 10;
+    }
+    const tr = el("tr", tag ? "cumark" : null);
     tr.append(el("td", null, String(i + 1)));
     tr.append(el("td", null, pos.ticker || "—"));
     tr.append(el("td", null, pos.issuer +
@@ -821,6 +899,10 @@ function renderHoldings(m) {
     tr.append(el("td", "r", fmtInt(pos.shares)));
     tr.append(el("td", "r", fmtFullUSD(pos.value)));
     tr.append(el("td", "r", pos.weight_pct.toFixed(2) + "%"));
+    const tdC = el("td", "r");
+    if (tag) tdC.append(el("span", "cumtag", tag));
+    tdC.append(document.createTextNode(cum.toFixed(1) + "%"));
+    tr.append(tdC);
     tb.append(tr);
   });
   t.append(tb);
@@ -961,6 +1043,19 @@ window.addEventListener("hashchange", route);
 renderStatusBar();
 renderFooter();
 route();
+{
+  const viewportWidth = document.documentElement.clientWidth;
+  const offenders = [...document.querySelectorAll("body *")]
+    .filter(node => node.getBoundingClientRect().right > viewportWidth + 1)
+    .slice(0, 8)
+    .map(node => node.tagName.toLowerCase() +
+      (node.className ? "." + String(node.className).trim().replace(/\s+/g, ".") : ""));
+  const qa = document.createElement("meta");
+  qa.name = "qa-overflow";
+  qa.content = document.documentElement.scrollWidth + "/" + viewportWidth +
+    (offenders.length ? " " + offenders.join(",") : "");
+  document.head.append(qa);
+}
 </script>
 </body>
 </html>

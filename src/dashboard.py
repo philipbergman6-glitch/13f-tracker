@@ -291,12 +291,43 @@ def load_aum_by_manager() -> dict[str, dict]:
         return {r["manager"]: r for r in csv.DictReader(fh)}
 
 
+def load_people_by_manager(path: Path = REF / "manager_people.csv"
+                           ) -> dict[str, dict]:
+    """manager -> its data/ref/manager_people.csv row (key person + firm bio URL)."""
+    if not path.exists():
+        return {}
+    with open(path, newline="", encoding="utf-8") as fh:
+        return {r["manager"]: r for r in csv.DictReader(fh)}
+
+
 def load_sector_map() -> dict[str, str]:
     path = REF / "sectors.csv"
     if not path.exists():
         return {}
     with open(path, newline="", encoding="utf-8") as fh:
         return {r["cusip"]: r["sector"] for r in csv.DictReader(fh)}
+
+
+def load_data_quality_notes(
+        path: Path = REF / "known_exceptions.csv"
+        ) -> dict[tuple[str, str], list[dict]]:
+    """Row-level filer anomalies suitable for prominent dashboard disclosure."""
+    notes: dict[tuple[str, str], list[dict]] = defaultdict(list)
+    if not path.exists():
+        return notes
+    with open(path, newline="", encoding="utf-8") as fh:
+        for row in csv.DictReader(fh):
+            category = row.get("category", "")
+            if not (category.startswith("filer-") or
+                    category.startswith("cusip-")):
+                continue
+            notes[(row["manager"], row["quarter"])].append({
+                "category": category,
+                "summary": row.get("summary", ""),
+                "resolution": row.get("resolution", ""),
+                "reference": row.get("reference", ""),
+            })
+    return notes
 
 
 def prev_quarter_file(mgr_dir: Path, qkey: str) -> str | None:
@@ -311,8 +342,10 @@ def build_payload(quarter: str | None = None) -> dict:
     spans = load_manager_map()
     managers = sorted({s.manager for s in spans})
     aum_by_manager = load_aum_by_manager()
+    people_by_manager = load_people_by_manager()
     sector_of = load_sector_map()
     flags = load_pipeline_flags()
+    quality_notes = load_data_quality_notes()
 
     latest = {}
     for m in managers:
@@ -350,6 +383,12 @@ def build_payload(quarter: str | None = None) -> dict:
         options = load_options_rows(cur_path)
         mgr_spans = [s for s in spans if s.manager == m]
         aum_row = aum_by_manager.get(m, {})
+        person_row = people_by_manager.get(m)
+        relevant_quarters = {qkey, prev_q}
+        manager_quality_notes = [
+            note for note_q in relevant_quarters if note_q
+            for note in quality_notes.get((m, note_q), [])
+        ]
 
         changes_by_manager[m] = chg
         payload["managers"].append({
@@ -358,6 +397,11 @@ def build_payload(quarter: str | None = None) -> dict:
             "prev_quarter_label": qlabel(prev_q) if prev_q else None,
             "later_filing": latest.get(slug) if latest.get(slug, qkey) > qkey else None,
             "filers": filer_entries(mgr_spans, qkey, cur_path, flags),
+            "person": ({
+                "name": person_row["person"],
+                "title": person_row.get("title", ""),
+                "url": person_row.get("url", ""),
+            } if person_row else None),
             "accessions": load_accessions(cur_path),
             "stats": stats,
             "aum": {
@@ -368,6 +412,7 @@ def build_payload(quarter: str | None = None) -> dict:
                 "retrieved": aum_row.get("retrieved", ""),
                 "note": aum_row.get("note", ""),
             },
+            "data_quality_notes": manager_quality_notes,
             "top_positions": top_positions(cur_book, 15),
             "changes": chg,
             "sector_mix": mix,
@@ -413,23 +458,26 @@ def run_status_summary(run: dict | None) -> dict:
     if run is None:
         return {"state": "unknown",
                 "label": "no gated pipeline run on record",
-                "completed_utc": None, "errors": None, "warnings": None}
+                "completed_utc": None, "errors": None}
     errors = int(run.get("validation_errors") or 0)
-    warnings = int(run.get("validation_warnings") or 0)
+    unresolved = len(run.get("unresolved_validation_warnings") or [])
+    invalid_dispositions = int(run.get("invalid_warning_dispositions") or 0)
     blocked = run.get("blocked") or []
     if run.get("ok"):
         return {"state": "passed",
-                "label": (f"checks passed · {errors} validation errors · "
-                          f"{warnings} warnings (reviewed)"),
+                "label": "checks passed",
                 "completed_utc": run.get("completed_utc"),
-                "errors": errors, "warnings": warnings}
+                "errors": errors}
     parts = ([f"{len(blocked)} manager-quarter(s) blocked"] if blocked else []) \
-        + ([f"{errors} validation errors"] if errors else [])
+        + ([f"{errors} validation errors"] if errors else []) \
+        + ([f"{unresolved} unresolved warnings"] if unresolved else []) \
+        + ([f"{invalid_dispositions} invalid warning dispositions"]
+           if invalid_dispositions else [])
     return {"state": "failed",
             "label": "checks FAILED — " + (", ".join(parts)
                                            or "see data/out/run_status.json"),
             "completed_utc": run.get("completed_utc"),
-            "errors": errors, "warnings": warnings}
+            "errors": errors}
 
 
 def check_run_status(path: Path = RUN_STATUS_PATH) -> None:

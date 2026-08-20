@@ -1,12 +1,12 @@
 # 13F Tracker
 
-Quarterly pipeline tracking SEC 13F holdings for a fixed 20-manager list, feeding a
+Quarterly pipeline tracking SEC 13F holdings for a fixed 16-manager list, feeding a
 static HTML dashboard and per-manager TradingView watchlists.
 
 ## Language
 
 **Manager**:
-One of the 20 names on Philip's fixed list — the human-level identity a dashboard line
+One of the 16 names on Philip's fixed list — the human-level identity a dashboard line
 represents. A Manager aggregates one or more Filers across time.
 _Avoid_: fund, firm, investor (ambiguous with Filer)
 
