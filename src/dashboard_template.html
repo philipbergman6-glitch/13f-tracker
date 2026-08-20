@@ -485,13 +485,21 @@ themeBtn.addEventListener("click", () => {
 });
 
 /* ---------- landing ---------- */
+function numberWord(n) {
+  const words = ["Zero", "One", "Two", "Three", "Four", "Five", "Six", "Seven",
+    "Eight", "Nine", "Ten", "Eleven", "Twelve", "Thirteen", "Fourteen",
+    "Fifteen", "Sixteen", "Seventeen", "Eighteen", "Nineteen", "Twenty"];
+  return words[n] || String(n);
+}
+
 function renderLanding() {
   const app = document.getElementById("app");
   app.className = "wrap";
   const lead = el("div", "lead");
   const lt = el("div", "lead-text");
   lt.append(el("div", "eyebrow", "GEMS Investment Research"));
-  lt.append(el("h1", "serif", "Twenty managers, quarter by quarter"));
+  lt.append(el("h1", "serif",
+    numberWord(DATA.managers.length) + " managers, quarter by quarter"));
   const hero = el("div", "lead-hero");
   hero.append(el("div", "heroval num", fmtUSD(DATA.combined_value)));
   hero.append(el("div", "herolabel",

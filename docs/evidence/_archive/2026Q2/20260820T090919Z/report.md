@@ -1,6 +1,6 @@
 # Evidence package — 2026Q2 release
 
-Generated 2026-08-20T09:09:19+00:00 from pipeline run 2026-08-20T08:54:50+00:00 (window 2024Q2–2026Q2, force_refresh=True), source commit `bd94fd70a678` with 1 uncommitted change(s) at generation time.
+Generated 2026-08-20T08:54:53+00:00 from pipeline run 2026-08-20T08:54:50+00:00 (window 2024Q2–2026Q2, force_refresh=True), source commit `835d2bddd9c2` with 1 uncommitted change(s) at generation time.
 
 Every figure below is copied from that run's outputs (nothing re-derived); machine-readable appendices sit next to this report. Required-item checklist:
 
@@ -100,7 +100,7 @@ Every mapped (manager, filer, quarter) in the window has an explicit committed s
 
 ## 6. Automated tests
 
-`python -m unittest discover -s tests` (Python 3.14.6): **159 tests, PASS**, run 2026-08-20T09:09:17+00:00 (`test_results.json`). A failing suite blocks this package.
+`python -m unittest discover -s tests` (Python 3.14.6): **159 tests, PASS**, run 2026-08-20T08:54:52+00:00 (`test_results.json`). A failing suite blocks this package.
 
 ## 7. Known exceptions
 
@@ -117,14 +117,14 @@ Accepted filer-side discrepancies and scope decisions, from the committed regist
 
 ## 8. Checksums and versions
 
-`checksums.csv` holds SHA-256 digests for the release dashboard build and all 316 source data files it derives from (holdings CSVs, filer statuses, reference tables, change tables, run gate outputs). At publication, release.py re-verifies every digest against the artifacts being published. Source code version: commit `bd94fd70a67839c227a178f4b67e07d026bc01da` (2026-08-20T11:55:04+03:00).
+`checksums.csv` holds SHA-256 digests for the release dashboard build and all 316 source data files it derives from (holdings CSVs, filer statuses, reference tables, change tables, run gate outputs). At publication, release.py re-verifies every digest against the artifacts being published. Source code version: commit `835d2bddd9c21f7e498cb6ea18823caa1754ec7b` (2026-08-20T11:54:31+03:00).
 
-- `dashboard/staging/index.html` — SHA-256 `6fe4d2c0614e3baa18f12f7d41b61558a56d5ba33b657b61e69ae148cd0d487b`
+- `dashboard/staging/index.html` — SHA-256 `155fb377ee6fe221c2ab647228d948788c902177f2a99088f24e41195889fdf0`
 
 ## 9. How to reproduce this release
 
 ```
-git checkout bd94fd70a67839c227a178f4b67e07d026bc01da
+git checkout 835d2bddd9c21f7e498cb6ea18823caa1754ec7b
 python src/release.py stage --quarter 2026Q2 --start 2024Q2 --end 2026Q2
 ```
 
@@ -136,6 +136,6 @@ Raw EDGAR responses cache under `data/raw/` (re-fetchable; superseded mutable in
 
 Completed by a human reviewer before the release is considered approved: replace each blank below, commit this file, then run `python src/release.py publish --quarter 2026Q2`. The publish gate blocks unless the decision line begins with `approve` and the signed report is committed; regenerating this package rewrites the block blank, so a stale approval can never carry over.
 
-- Reviewer name: ______________________
-- Review date (YYYY-MM-DD): ______________________
-- Decision (approve / reject, with notes): ______________________
+- Reviewer name: Philip
+- Review date (YYYY-MM-DD): 2026-08-20
+- Decision (approve / reject, with notes): approve — manager list trimmed to 16 (Icahn, Leon Cooperman, Fairholme, Giverny removed; holdings archived to data/_archive/holdings/)

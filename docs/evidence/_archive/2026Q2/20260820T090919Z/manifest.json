@@ -1,10 +1,10 @@
 {
   "release_quarter": "2026Q2",
-  "generated_utc": "2026-08-20T09:09:19+00:00",
-  "source_commit": "bd94fd70a67839c227a178f4b67e07d026bc01da",
-  "source_commit_date": "2026-08-20T11:55:04+03:00",
+  "generated_utc": "2026-08-20T08:54:53+00:00",
+  "source_commit": "835d2bddd9c21f7e498cb6ea18823caa1754ec7b",
+  "source_commit_date": "2026-08-20T11:54:31+03:00",
   "uncommitted_changes_at_generation": [
-    "M src/dashboard_template.html"
+    "M data/holdings/filer_status.csv"
   ],
   "pipeline_run": {
     "ok": true,
