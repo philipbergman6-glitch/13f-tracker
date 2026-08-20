@@ -1,0 +1,15 @@
+{
+  "published_utc": "2026-08-20T08:55:00+00:00",
+  "action": "publish",
+  "quarter": "2026Q2",
+  "pipeline_run_utc": "2026-08-20T08:54:50+00:00",
+  "source_commit": "270923339130abec3e46c58a4dae198086029047",
+  "dashboard_sha256": "155fb377ee6fe221c2ab647228d948788c902177f2a99088f24e41195889fdf0",
+  "evidence_package": "docs/evidence/2026Q2",
+  "evidence_generated_utc": "2026-08-20T08:54:53+00:00",
+  "reviewer": "Philip",
+  "review_date": "2026-08-20",
+  "decision": "approve \u2014 manager list trimmed to 16 (Icahn, Leon Cooperman, Fairholme, Giverny removed; holdings archived to data/_archive/holdings/)",
+  "prior_archived_to": "dashboard/_archive/20260820T085500Z",
+  "note": ""
+}
